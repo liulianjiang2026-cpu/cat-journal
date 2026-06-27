@@ -2,13 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Entry } from '../lib/backend'
+import { formatDate } from '../lib/date'
 import { Grip, Pencil, Trash, Check, X } from './icons'
 
 interface Props {
   entry: Entry
   isAdmin: boolean
+  draggable?: boolean
+  index?: number
   onSaveCaption: (id: string, caption: string) => void
   onDelete: (entry: Entry) => void
+  onOpen: (entry: Entry) => void
 }
 
 // deterministic tiny tilt per card for the scrapbook feel
@@ -18,10 +22,19 @@ function tiltFor(id: string): number {
   return ((h % 5) - 2) * 0.6 // -1.2deg .. +1.2deg
 }
 
-export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: Props) {
+export default function EntryCard({
+  entry,
+  isAdmin,
+  draggable = true,
+  index = 0,
+  onSaveCaption,
+  onDelete,
+  onOpen,
+}: Props) {
+  const canDrag = isAdmin && draggable
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: entry.id,
-    disabled: !isAdmin,
+    disabled: !canDrag,
   })
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.caption)
@@ -39,6 +52,7 @@ export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: P
     transition,
     rotate: isDragging ? '0deg' : `${tiltFor(entry.id)}deg`,
     zIndex: isDragging ? 50 : undefined,
+    animationDelay: `${Math.min(index, 12) * 45}ms`,
   }
 
   function save() {
@@ -50,7 +64,7 @@ export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: P
     <div
       ref={setNodeRef}
       style={style}
-      className={`group mb-5 break-inside-avoid rounded-[14px] bg-white p-3 pb-4 shadow-polaroid transition-shadow ${
+      className={`group mb-5 animate-fade break-inside-avoid rounded-[14px] bg-white p-3 pb-4 shadow-polaroid transition-shadow hover:shadow-2xl ${
         isDragging ? 'opacity-90 shadow-2xl' : ''
       }`}
     >
@@ -59,8 +73,9 @@ export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: P
           src={entry.url}
           alt={entry.caption || 'cat'}
           loading="lazy"
-          className="block w-full object-cover"
+          className="block w-full cursor-zoom-in object-cover transition duration-300 group-hover:brightness-[1.03]"
           draggable={false}
+          onClick={() => !editing && onOpen(entry)}
         />
 
         {isAdmin && (
@@ -82,7 +97,7 @@ export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: P
           </div>
         )}
 
-        {isAdmin && (
+        {canDrag && (
           <button
             className="absolute left-2 top-2 cursor-grab touch-none rounded-full bg-white/90 p-1.5 text-coffee opacity-0 shadow transition active:cursor-grabbing group-hover:opacity-100"
             title="拖动排序"
@@ -95,6 +110,7 @@ export default function EntryCard({ entry, isAdmin, onSaveCaption, onDelete }: P
       </div>
 
       <div className="px-1 pt-3">
+        <p className="mb-1 font-hand text-sm text-coffee/70">{formatDate(entry.created_at)}</p>
         {editing ? (
           <div>
             <textarea
