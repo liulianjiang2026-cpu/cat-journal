@@ -275,7 +275,6 @@ export default function Gallery() {
                     <Clock width={16} height={16} className="mb-0.5 mr-1 inline" />
                     {group.key}
                   </h2>
-                  <span className="text-xs text-coffee/60">{group.items.length} 张</span>
                   <span className="h-px flex-1 bg-ink/15" />
                 </div>
                 <div className={MASONRY}>

@@ -22,7 +22,12 @@ export default function UploadDialog({
   const [items, setItems] = useState<Pending[]>([])
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [batchDate, setBatchDate] = useState(today())
   const inputRef = useRef<HTMLInputElement>(null)
+
+  function applyDateToAll() {
+    setItems((prev) => prev.map((it) => ({ ...it, date: batchDate })))
+  }
 
   useEffect(() => {
     return () => items.forEach((it) => URL.revokeObjectURL(it.preview))
@@ -31,10 +36,14 @@ export default function UploadDialog({
 
   function addFiles(files: FileList | null) {
     if (!files) return
-    const next: Pending[] = Array.from(files)
-      .filter((f) => f.type.startsWith('image/'))
-      .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: today() }))
-    setItems((prev) => [...prev, ...next])
+    setItems((prev) => {
+      // 第一张默认今天，后续沿用上一张的日期
+      const fallback = prev.length ? prev[prev.length - 1].date : today()
+      const next: Pending[] = Array.from(files)
+        .filter((f) => f.type.startsWith('image/'))
+        .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: fallback }))
+      return [...prev, ...next]
+    })
   }
 
   async function save() {
@@ -69,7 +78,7 @@ export default function UploadDialog({
         <button onClick={onClose} className="absolute right-4 top-4 text-coffee hover:text-ink">
           <X />
         </button>
-        <h2 className="mb-4 font-hand text-2xl text-ink">添加新的回忆 🐾</h2>
+        <h2 className="mb-4 font-script text-4xl leading-tight text-ink">Say Meow!</h2>
 
         <div
           className="mb-4 cursor-pointer rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 p-6 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70"
@@ -81,7 +90,7 @@ export default function UploadDialog({
           }}
         >
           <Plus className="mx-auto mb-1" />
-          <p className="text-sm">点击或把照片拖到这里（可多选）</p>
+          <p className="font-cute text-base">喵喵喵！</p>
           <input
             ref={inputRef}
             type="file"
@@ -91,6 +100,23 @@ export default function UploadDialog({
             onChange={(e) => addFiles(e.target.files)}
           />
         </div>
+
+        {items.length > 1 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-paper/60 px-3 py-2 font-cute text-sm text-coffee">
+            <Calendar width={15} height={15} />
+            <span>喵喵～</span>
+            <input
+              type="date"
+              className="field flex-1 px-2 py-1 text-sm"
+              max={today()}
+              value={batchDate}
+              onChange={(e) => setBatchDate(e.target.value || today())}
+            />
+            <button className="btn-soft px-3 py-1 font-cute text-xs" onClick={applyDateToAll}>
+              ALL！
+            </button>
+          </div>
+        )}
 
         {items.length > 0 && (
           <div className="-mr-2 flex-1 space-y-3 overflow-y-auto pr-2">
@@ -113,8 +139,8 @@ export default function UploadDialog({
                     />
                   </label>
                   <textarea
-                    className="field min-h-[3.5rem] w-full resize-none font-hand text-base"
-                    placeholder="写点什么…（也可以留空）"
+                    className="field min-h-[3.5rem] w-full resize-none font-cute text-base"
+                    placeholder="喵？喵喵喵喵喵"
                     value={it.caption}
                     onChange={(e) => {
                       const next = [...items]
@@ -139,15 +165,15 @@ export default function UploadDialog({
 
         <div className="mt-5 flex items-center justify-end gap-2">
           {busy && (
-            <span className="mr-auto text-sm text-coffee">
-              上传中 {progress}/{items.length}…
+            <span className="mr-auto font-cute text-sm text-coffee">
+              努力上传中喵 {progress}/{items.length}…
             </span>
           )}
-          <button className="btn-ghost" onClick={onClose} disabled={busy}>
-            取消
+          <button className="btn-ghost font-cute" onClick={onClose} disabled={busy}>
+            喵❌
           </button>
-          <button className="btn-primary" onClick={save} disabled={busy || items.length === 0}>
-            保存 {items.length > 0 ? `(${items.length})` : ''}
+          <button className="btn-primary font-cute" onClick={save} disabled={busy || items.length === 0}>
+            喵✅
           </button>
         </div>
       </div>
