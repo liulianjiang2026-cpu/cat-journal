@@ -7,7 +7,7 @@ import EntryCard from './EntryCard'
 import UploadDialog from './UploadDialog'
 import AdminLogin from './AdminLogin'
 import Lightbox from './Lightbox'
-import { Plus, Paw, Logout, Grid, Clock, Calendar } from './icons'
+import { Plus, Paw, Logout, Grid, Clock, Calendar, Sort } from './icons'
 
 type View = 'album' | 'timeline'
 
@@ -22,6 +22,7 @@ export default function Gallery() {
   const [toDelete, setToDelete] = useState<Entry | null>(null)
   const [view, setView] = useState<View>('album')
   const [filterMonth, setFilterMonth] = useState<string>('all')
+  const [sortAsc, setSortAsc] = useState(false) // false=最新在前(倒序)，true=最早在前(正序)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const load = useCallback(async () => {
@@ -62,13 +63,15 @@ export default function Gallery() {
     [entries, filterMonth],
   )
 
-  // 相册：按日期 最新 → 最早
-  const albumEntries = useMemo(
-    () => [...visible].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [visible],
-  )
+  // 相册：按日期排序（sortAsc 决定方向）
+  const albumEntries = useMemo(() => {
+    const arr = [...visible].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+    return sortAsc ? arr : arr.reverse()
+  }, [visible, sortAsc])
 
-  // 时间轴：月份块最近的在上；每月内 1 → 30 正序
+  // 时间轴：月份块与月内顺序都跟随 sortAsc
   const timelineGroups = useMemo(() => {
     const map = new Map<string, Entry[]>()
     for (const e of visible) {
@@ -77,15 +80,16 @@ export default function Gallery() {
       map.get(k)!.push(e)
     }
     const groups = [...map.entries()].map(([key, items]) => {
-      const sorted = [...items].sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      )
+      const sorted = [...items].sort((a, b) => {
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        return sortAsc ? diff : -diff
+      })
       const d = new Date(sorted[0].created_at)
       return { key, items: sorted, t: d.getFullYear() * 12 + d.getMonth() }
     })
-    groups.sort((a, b) => b.t - a.t) // 月份倒序：最近的月在上
+    groups.sort((a, b) => (sortAsc ? a.t - b.t : b.t - a.t))
     return groups.map(({ key, items }) => ({ key, items }))
-  }, [visible])
+  }, [visible, sortAsc])
 
   const displayFlat = useMemo(
     () => (view === 'album' ? albumEntries : timelineGroups.flatMap((g) => g.items)),
@@ -172,31 +176,31 @@ export default function Gallery() {
 
       {/* toolbar: 视图切换 + 月份筛选 */}
       {!loading && entries.length > 0 && (
-        <div className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-3 px-4">
+        <div className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4 text-sm">
           <div className="inline-flex rounded-full border border-ink/10 bg-cream/70 p-1 shadow-card">
             <button
-              className={`btn gap-1.5 px-4 py-1.5 ${view === 'album' ? 'bg-ink text-cream' : 'text-coffee'}`}
+              className={`btn gap-1 px-3 py-1 ${view === 'album' ? 'bg-ink text-cream' : 'text-coffee'}`}
               onClick={() => setView('album')}
             >
-              <Grid width={15} height={15} /> 相册
+              <Grid width={13} height={13} /> 相册
             </button>
             <button
-              className={`btn gap-1.5 px-4 py-1.5 ${view === 'timeline' ? 'bg-ink text-cream' : 'text-coffee'}`}
+              className={`btn gap-1 px-3 py-1 ${view === 'timeline' ? 'bg-ink text-cream' : 'text-coffee'}`}
               onClick={() => setView('timeline')}
             >
-              <Clock width={15} height={15} /> 时间轴
+              <Clock width={13} height={13} /> 时间轴
             </button>
           </div>
 
           {months.length > 1 && (
-            <label className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-cream/70 px-3 py-1.5 text-sm text-coffee shadow-card">
-              <Calendar width={15} height={15} />
+            <label className="inline-flex items-center gap-1 rounded-full border border-ink/10 bg-cream/70 px-2.5 py-1 text-coffee shadow-card">
+              <Calendar width={13} height={13} />
               <select
-                className="cursor-pointer bg-transparent pr-1 text-ink outline-none"
+                className="cursor-pointer bg-transparent text-ink outline-none"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
               >
-                <option value="all">全部时间</option>
+                <option value="all">全部</option>
                 {months.map((m) => (
                   <option key={m} value={m}>
                     {m}
@@ -205,6 +209,14 @@ export default function Gallery() {
               </select>
             </label>
           )}
+
+          <button
+            className="inline-flex items-center gap-1 rounded-full border border-ink/10 bg-cream/70 px-2.5 py-1 text-coffee shadow-card transition hover:text-ink active:scale-95"
+            onClick={() => setSortAsc((v) => !v)}
+            title="切换正序 / 倒序"
+          >
+            <Sort width={13} height={13} /> {sortAsc ? '最早' : '最新'}
+          </button>
         </div>
       )}
 

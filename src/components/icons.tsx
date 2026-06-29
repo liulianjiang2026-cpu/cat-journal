@@ -102,3 +102,8 @@ export const Filter = (p: SVGProps<SVGSVGElement>) => (
     <path d="M3 5h18l-7 8v6l-4-2v-4Z" />
   </svg>
 )
+export const Sort = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M7 4v16M7 20l-3-3M7 4l3 3M17 20V4M17 4l-3 3M17 20l3-3" />
+  </svg>
+)
