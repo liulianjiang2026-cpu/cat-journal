@@ -1,15 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  DndContext,
-  PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { backend, type Entry } from '../lib/backend'
 import { SITE } from '../lib/config'
 import { monthKey } from '../lib/date'
@@ -34,12 +23,6 @@ export default function Gallery() {
   const [view, setView] = useState<View>('album')
   const [filterMonth, setFilterMonth] = useState<string>('all')
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
-    useSensor(KeyboardSensor),
-  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -79,45 +62,39 @@ export default function Gallery() {
     [entries, filterMonth],
   )
 
+  // 相册：按日期 最新 → 最早
+  const albumEntries = useMemo(
+    () => [...visible].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [visible],
+  )
+
+  // 时间轴：月份块最近的在上；每月内 1 → 30 正序
   const timelineGroups = useMemo(() => {
-    const byDate = [...visible].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
-    const groups: { key: string; items: Entry[] }[] = []
-    for (const e of byDate) {
+    const map = new Map<string, Entry[]>()
+    for (const e of visible) {
       const k = monthKey(e.created_at)
-      const g = groups.find((x) => x.key === k)
-      if (g) g.items.push(e)
-      else groups.push({ key: k, items: [e] })
+      if (!map.has(k)) map.set(k, [])
+      map.get(k)!.push(e)
     }
-    return groups
+    const groups = [...map.entries()].map(([key, items]) => {
+      const sorted = [...items].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      )
+      const d = new Date(sorted[0].created_at)
+      return { key, items: sorted, t: d.getFullYear() * 12 + d.getMonth() }
+    })
+    groups.sort((a, b) => b.t - a.t) // 月份倒序：最近的月在上
+    return groups.map(({ key, items }) => ({ key, items }))
   }, [visible])
 
   const displayFlat = useMemo(
-    () => (view === 'album' ? visible : timelineGroups.flatMap((g) => g.items)),
-    [view, visible, timelineGroups],
+    () => (view === 'album' ? albumEntries : timelineGroups.flatMap((g) => g.items)),
+    [view, albumEntries, timelineGroups],
   )
-
-  const canReorder = filterMonth === 'all' // 仅全部+相册时可拖动排序
 
   const openLightbox = (entry: Entry) => {
     const i = displayFlat.findIndex((e) => e.id === entry.id)
     if (i >= 0) setLightboxIndex(i)
-  }
-
-  async function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e
-    if (!over || active.id === over.id) return
-    const oldIndex = entries.findIndex((x) => x.id === active.id)
-    const newIndex = entries.findIndex((x) => x.id === over.id)
-    const reordered = arrayMove(entries, oldIndex, newIndex)
-    setEntries(reordered)
-    try {
-      await backend.reorder(reordered.map((x) => x.id))
-    } catch (err) {
-      console.error(err)
-      load()
-    }
   }
 
   function handleSaveCaption(id: string, caption: string) {
@@ -256,15 +233,11 @@ export default function Gallery() {
             </p>
           </div>
         ) : view === 'album' ? (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={visible.map((e) => e.id)} strategy={rectSortingStrategy}>
-              <div className={MASONRY}>
-                {visible.map((entry, i) => (
-                  <EntryCard key={entry.id} entry={entry} index={i} draggable={canReorder} {...cardProps} />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <div className={MASONRY}>
+            {albumEntries.map((entry, i) => (
+              <EntryCard key={entry.id} entry={entry} index={i} draggable={false} {...cardProps} />
+            ))}
+          </div>
         ) : (
           <div className="space-y-8">
             {timelineGroups.map((group) => (
