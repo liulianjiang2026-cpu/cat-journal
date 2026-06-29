@@ -33,8 +33,15 @@ export default function Gate() {
       >
         <span className="washi-tape" />
         <div className="text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose/20 text-rose">
-            <Paw width={30} height={30} />
+          <div className="relative mx-auto mb-3 h-28 w-28">
+            <img
+              src={`${import.meta.env.BASE_URL}qiuqiu.png`}
+              alt={SITE.catName}
+              className="h-28 w-28 rounded-full object-cover shadow-polaroid ring-4 ring-white"
+            />
+            <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-rose/90 text-cream shadow">
+              <Paw width={18} height={18} />
+            </span>
           </div>
           <h1 className="font-hand text-3xl text-ink">{SITE.title}</h1>
           <p className="mt-1 text-sm text-coffee">{SITE.subtitle}</p>

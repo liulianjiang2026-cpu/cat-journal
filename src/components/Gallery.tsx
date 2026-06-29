@@ -130,9 +130,11 @@ export default function Gallery() {
       <header className="sticky top-0 z-30 border-b border-ink/10 bg-paper/80 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose/20 text-rose">
-              <Paw width={20} height={20} />
-            </span>
+            <img
+              src={`${import.meta.env.BASE_URL}qiuqiu.png`}
+              alt={SITE.catName}
+              className="h-11 w-11 rounded-full object-cover shadow-card ring-2 ring-white"
+            />
             <div className="leading-tight">
               <h1 className="font-hand text-2xl text-ink">{SITE.title}</h1>
               <p className="text-xs text-coffee">{SITE.subtitle}</p>
