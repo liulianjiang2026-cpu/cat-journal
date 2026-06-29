@@ -2,6 +2,14 @@ import { useState } from 'react'
 import { GATE_QUESTIONS, SITE, normalizeAnswer } from '../lib/config'
 import { useAuth } from '../context/AuthContext'
 import { Paw } from './icons'
+import {
+  HeartSticker,
+  StarSticker,
+  PawSticker,
+  FishSticker,
+  FlowerSticker,
+  YarnSticker,
+} from './stickers'
 
 export default function Gate() {
   const { unlockGate } = useAuth()
@@ -31,8 +39,20 @@ export default function Gate() {
         }`}
         style={{ transform: 'rotate(-1deg)' }}
       >
+        {/* 手账装饰：胶带 */}
         <span className="washi-tape" />
-        <div className="text-center">
+        <span className="tape -left-4 top-12 rounded-sm text-pink" style={{ rotate: '-32deg' }} />
+        <span className="tape -right-5 bottom-20 rounded-sm text-sky" style={{ rotate: '28deg' }} />
+
+        {/* 手账装饰：手绘贴纸 */}
+        <FlowerSticker className="pointer-events-none absolute -left-3 -top-3" style={{ rotate: '-16deg' }} />
+        <YarnSticker className="pointer-events-none absolute right-8 -top-4" style={{ rotate: '12deg' }} />
+        <FishSticker className="pointer-events-none absolute -right-4 top-24" style={{ rotate: '-8deg' }} />
+        <StarSticker className="pointer-events-none absolute -left-5 bottom-28" style={{ rotate: '-12deg' }} />
+        <HeartSticker className="pointer-events-none absolute -right-3 bottom-8" style={{ rotate: '14deg' }} />
+        <PawSticker className="pointer-events-none absolute left-6 -bottom-4" style={{ rotate: '10deg' }} />
+
+        <div className="relative text-center">
           <div className="relative mx-auto mb-3 h-28 w-28">
             <img
               src={`${import.meta.env.BASE_URL}qiuqiu.png`}
@@ -43,16 +63,16 @@ export default function Gate() {
               <Paw width={18} height={18} />
             </span>
           </div>
-          <h1 className="font-hand text-3xl text-ink">{SITE.title}</h1>
-          <p className="mt-1 text-sm text-coffee">{SITE.subtitle}</p>
+          <h1 className="font-script text-5xl leading-tight text-ink">{SITE.title}</h1>
+          {SITE.subtitle && <p className="mt-1 text-sm text-coffee">{SITE.subtitle}</p>}
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-4">
+        <form onSubmit={submit} className="relative mt-6 space-y-4">
           {GATE_QUESTIONS.map((qa, i) => (
             <div key={i}>
-              <label className="mb-1 block text-sm text-ink/80">{qa.q}</label>
+              <label className="mb-1 block font-cute text-base text-ink/80">{qa.q}</label>
               <input
-                className="field"
+                className="field text-center font-cute text-lg"
                 value={answers[i]}
                 onChange={(e) => {
                   const next = [...answers]
@@ -60,18 +80,16 @@ export default function Gate() {
                   setAnswers(next)
                   setError('')
                 }}
-                placeholder="在这里输入答案…"
+                placeholder="喵？"
                 autoFocus={i === 0}
               />
             </div>
           ))}
-          {error && <p className="text-sm text-rose">{error}</p>}
-          <button type="submit" className="btn-primary w-full">
-            进入手账 🐾
+          {error && <p className="text-center font-cute text-sm text-rose">{error}</p>}
+          <button type="submit" className="btn-primary w-full font-cute text-lg tracking-wide">
+            喵喵喵！🐾
           </button>
         </form>
-
-        <p className="mt-5 text-center text-xs text-coffee/70">仅限好朋友进入 · 答对暗号即可浏览</p>
       </div>
       <style>{`@keyframes shake{0%,100%{transform:rotate(-1deg) translateX(0)}25%{transform:rotate(-1deg) translateX(-6px)}75%{transform:rotate(-1deg) translateX(6px)}}`}</style>
     </div>

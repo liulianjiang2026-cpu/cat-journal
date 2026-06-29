@@ -91,3 +91,14 @@ export const Clock = (p: SVGProps<SVGSVGElement>) => (
     <path d="M12 7v5l3 2" />
   </svg>
 )
+export const Calendar = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </svg>
+)
+export const Filter = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M3 5h18l-7 8v6l-4-2v-4Z" />
+  </svg>
+)

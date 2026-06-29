@@ -4,18 +4,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#f5ecd9',
-        cream: '#fbf6ea',
-        ink: '#4a3f35',
-        coffee: '#7a6a58',
-        tape: '#e9d9a6',
+        paper: '#efe7d6',
+        cream: '#fbf8f0',
+        ink: '#4a4036',
+        coffee: '#8a7a66',
+        tape: '#ecd9a8',
         rose: '#e8a7a1',
-        sage: '#a9bba0',
+        sage: '#bccaa6',
+        // 参考1 马卡龙色（贴纸/胶带用）
+        peach: '#f8dcc0',
+        sky: '#aecfe2',
+        pink: '#f4c2d6',
+        lemon: '#f0e3a0',
+        lilac: '#cabfe4',
+        clay: '#dca083',
       },
       fontFamily: {
         serif: ['"Noto Serif SC"', 'serif'],
         hand: ['"Ma Shan Zheng"', '"Gaegu"', 'cursive'],
-        cute: ['"Gaegu"', '"Ma Shan Zheng"', 'cursive'],
+        cute: ['"ZCOOL KuaiLe"', '"Gaegu"', '"Ma Shan Zheng"', 'cursive'],
+        script: ['"Great Vibes"', '"Pinyon Script"', 'cursive'],
       },
       boxShadow: {
         polaroid: '0 10px 25px -8px rgba(74,63,53,0.35), 0 2px 6px rgba(74,63,53,0.15)',

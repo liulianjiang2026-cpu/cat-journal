@@ -44,7 +44,7 @@ export const supabaseBackend: Backend = {
     return (data as RowDB[]).map(toEntry)
   },
 
-  async create(file, caption) {
+  async create(file, caption, dateISO) {
     const sb = client()
     const ext = (file as File).name?.split('.').pop()?.toLowerCase() || 'jpg'
     const path = `${crypto.randomUUID()}.${ext}`
@@ -64,9 +64,11 @@ export const supabaseBackend: Backend = {
       .maybeSingle()
     const nextOrder = (maxRow?.sort_order ?? 0) + 1
 
+    const insertRow: Record<string, unknown> = { photo_path: path, caption, sort_order: nextOrder }
+    if (dateISO) insertRow.created_at = dateISO
     const { data, error } = await sb
       .from('entries')
-      .insert({ photo_path: path, caption, sort_order: nextOrder })
+      .insert(insertRow)
       .select('*')
       .single()
     if (error) {

@@ -93,16 +93,17 @@ export const localBackend: Backend = {
     return rows.sort((a, b) => a.sort_order - b.sort_order).map(rowToEntry)
   },
 
-  async create(file, caption) {
+  async create(file, caption, dateISO) {
     const rows = await getAllRows()
     const maxOrder = rows.reduce((m, r) => Math.max(m, r.sort_order), 0)
     const now = new Date().toISOString()
+    const created = dateISO || now
     const row: Row = {
       id: crypto.randomUUID(),
       blob: file,
       caption,
       sort_order: maxOrder + 1,
-      created_at: now,
+      created_at: created,
       updated_at: now,
     }
     await putRow(row)

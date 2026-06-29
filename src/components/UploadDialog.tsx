@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { backend, type Entry } from '../lib/backend'
 import { compressImage } from '../lib/image'
-import { X, Plus } from './icons'
+import { X, Plus, Calendar } from './icons'
 
 interface Pending {
   file: File
   preview: string
   caption: string
+  date: string // YYYY-MM-DD
 }
+
+const today = () => new Date().toISOString().slice(0, 10)
 
 export default function UploadDialog({
   onClose,
@@ -30,7 +33,7 @@ export default function UploadDialog({
     if (!files) return
     const next: Pending[] = Array.from(files)
       .filter((f) => f.type.startsWith('image/'))
-      .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '' }))
+      .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: today() }))
     setItems((prev) => [...prev, ...next])
   }
 
@@ -43,7 +46,8 @@ export default function UploadDialog({
       for (let i = 0; i < items.length; i++) {
         const it = items[i]
         const compressed = await compressImage(it.file)
-        const entry = await backend.create(compressed, it.caption.trim())
+        const dateISO = new Date(`${it.date}T12:00:00`).toISOString()
+        const entry = await backend.create(compressed, it.caption.trim(), dateISO)
         created.push(entry)
         setProgress(i + 1)
       }
@@ -92,17 +96,33 @@ export default function UploadDialog({
           <div className="-mr-2 flex-1 space-y-3 overflow-y-auto pr-2">
             {items.map((it, i) => (
               <div key={i} className="flex gap-3 rounded-2xl bg-paper/50 p-2">
-                <img src={it.preview} className="h-20 w-20 shrink-0 rounded-lg object-cover" />
-                <textarea
-                  className="field min-h-[5rem] flex-1 resize-none font-hand text-base"
-                  placeholder="写点什么…（也可以留空）"
-                  value={it.caption}
-                  onChange={(e) => {
-                    const next = [...items]
-                    next[i] = { ...next[i], caption: e.target.value }
-                    setItems(next)
-                  }}
-                />
+                <img src={it.preview} className="h-24 w-20 shrink-0 rounded-lg object-cover" />
+                <div className="flex-1 space-y-2">
+                  <label className="flex items-center gap-2 text-xs text-coffee">
+                    <Calendar width={14} height={14} />
+                    <input
+                      type="date"
+                      className="field flex-1 px-2 py-1 text-sm"
+                      max={today()}
+                      value={it.date}
+                      onChange={(e) => {
+                        const next = [...items]
+                        next[i] = { ...next[i], date: e.target.value || today() }
+                        setItems(next)
+                      }}
+                    />
+                  </label>
+                  <textarea
+                    className="field min-h-[3.5rem] w-full resize-none font-hand text-base"
+                    placeholder="写点什么…（也可以留空）"
+                    value={it.caption}
+                    onChange={(e) => {
+                      const next = [...items]
+                      next[i] = { ...next[i], caption: e.target.value }
+                      setItems(next)
+                    }}
+                  />
+                </div>
                 <button
                   className="self-start text-coffee/60 hover:text-rose"
                   onClick={() => {

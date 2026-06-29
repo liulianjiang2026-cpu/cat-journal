@@ -16,8 +16,9 @@ export interface Backend {
   readonly mode: 'local' | 'cloud'
 
   list(): Promise<Entry[]>
-  /** upload a compressed image + caption, appended to the end */
-  create(file: Blob, caption: string): Promise<Entry>
+  /** upload a compressed image + caption, appended to the end.
+   *  dateISO (可选) 指定拍摄日期，用作 created_at；不传则用当前时间。 */
+  create(file: Blob, caption: string, dateISO?: string): Promise<Entry>
   updateCaption(id: string, caption: string): Promise<void>
   /** persist a new ordering given the full list of ids in display order */
   reorder(orderedIds: string[]): Promise<void>

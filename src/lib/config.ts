@@ -23,16 +23,15 @@ export const GATE_QUESTIONS: GateQuestion[] = (() => {
       console.warn('VITE_GATE_QA is not valid JSON, using defaults')
     }
   }
-  return [
-    { q: '请输入暗号，才能进入猫咪手账 🐾（提示：猫咪最爱说的话）', answers: ['喵', 'miao', 'meow', '喵喵'] },
-  ]
+  return [{ q: '秋秋和妈妈第一次见面的时间？', answers: ['20250910'] }]
 })()
 
 /** Branding */
 export const SITE = {
-  title: env.VITE_SITE_TITLE || '猫咪手账',
-  subtitle: env.VITE_SITE_SUBTITLE || '记录每一个软乎乎的瞬间',
-  catName: env.VITE_CAT_NAME || '我的小猫',
+  title: env.VITE_SITE_TITLE || "Qiuqiu's Diary",
+  // 允许设为空字符串以隐藏副标题
+  subtitle: env.VITE_SITE_SUBTITLE ?? '',
+  catName: env.VITE_CAT_NAME || '秋秋',
 }
 
 /** Supabase config — when both present, the app runs in CLOUD mode. */
