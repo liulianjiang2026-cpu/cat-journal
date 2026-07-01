@@ -11,7 +11,7 @@ import { Plus, Paw, Logout, Grid, Clock, Calendar, Sort } from './icons'
 
 type View = 'album' | 'timeline'
 
-const MASONRY = 'columns-2 gap-5 sm:columns-2 md:columns-3 lg:columns-4'
+const CARD_GRID = 'grid grid-cols-2 items-start gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 
 export default function Gallery() {
   const { isAdmin, logoutAdmin } = useAuth()
@@ -71,7 +71,7 @@ export default function Gallery() {
     return sortAsc ? arr : arr.reverse()
   }, [visible, sortAsc])
 
-  // 时间轴：月份块与月内顺序都跟随 sortAsc
+  // 时间轴：切换正/倒序只影响月份块；每个月内部始终按 1 -> 30 正序阅读
   const timelineGroups = useMemo(() => {
     const map = new Map<string, Entry[]>()
     for (const e of visible) {
@@ -81,8 +81,7 @@ export default function Gallery() {
     }
     const groups = [...map.entries()].map(([key, items]) => {
       const sorted = [...items].sort((a, b) => {
-        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        return sortAsc ? diff : -diff
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       })
       const d = new Date(sorted[0].created_at)
       return { key, items: sorted, t: d.getFullYear() * 12 + d.getMonth() }
@@ -148,10 +147,11 @@ export default function Gallery() {
             {isAdmin ? (
               <>
                 <button
-                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-rose px-3.5 py-2 text-sm font-medium text-white shadow-card transition hover:brightness-105 active:scale-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-rose text-white shadow-card transition hover:brightness-105 active:scale-95"
                   onClick={() => setShowUpload(true)}
+                  title="Add"
                 >
-                  <Plus width={16} height={16} /> 添加
+                  <Plus width={16} height={16} />
                 </button>
                 <button
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-cream text-coffee transition hover:text-ink active:scale-95"
@@ -163,11 +163,11 @@ export default function Gallery() {
               </>
             ) : (
               <button
-                className="inline-flex items-center gap-1 rounded-full border border-ink/10 bg-cream/70 px-3 py-1.5 text-sm text-coffee/80 transition hover:text-ink active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-cream/60 text-coffee/55 transition hover:bg-cream hover:text-ink active:scale-95"
                 onClick={() => setShowLogin(true)}
                 title="管理员登录"
               >
-                <Paw width={15} height={15} /> login
+                <Paw width={15} height={15} />
               </button>
             )}
           </div>
@@ -176,31 +176,31 @@ export default function Gallery() {
 
       {/* toolbar: 视图切换 + 月份筛选 */}
       {!loading && entries.length > 0 && (
-        <div className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4 text-sm">
-          <div className="inline-flex rounded-full border border-ink/10 bg-cream/70 p-1 shadow-card">
+        <div className="mx-auto mt-4 flex max-w-5xl flex-nowrap items-center justify-center gap-1.5 overflow-x-auto px-4 text-[12px] font-serif [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="inline-flex shrink-0 rounded-[16px] border border-ink/10 bg-cream/75 p-0.5 shadow-card backdrop-blur">
             <button
-              className={`btn gap-1 px-3 py-1 ${view === 'album' ? 'bg-ink text-cream' : 'text-coffee'}`}
+              className={`btn h-8 gap-0.5 rounded-[12px] px-2 py-0 text-[12px] font-medium ${view === 'album' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
               onClick={() => setView('album')}
             >
-              <Grid width={13} height={13} /> 相册
+              <Grid width={13} height={13} /> Album
             </button>
             <button
-              className={`btn gap-1 px-3 py-1 ${view === 'timeline' ? 'bg-ink text-cream' : 'text-coffee'}`}
+              className={`btn h-8 gap-0.5 rounded-[12px] px-2 py-0 text-[12px] font-medium ${view === 'timeline' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
               onClick={() => setView('timeline')}
             >
-              <Clock width={13} height={13} /> 时间轴
+              <Clock width={13} height={13} /> Timeline
             </button>
           </div>
 
           {months.length > 1 && (
-            <label className="inline-flex items-center gap-1 rounded-full border border-ink/10 bg-cream/70 px-2.5 py-1 text-coffee shadow-card">
+            <label className="inline-flex h-8 w-[5.35rem] shrink-0 items-center gap-0.5 rounded-[16px] border border-ink/10 bg-cream/75 px-1.5 text-coffee/75 shadow-card backdrop-blur">
               <Calendar width={13} height={13} />
               <select
-                className="cursor-pointer bg-transparent text-ink outline-none"
+                className="min-w-0 flex-1 cursor-pointer bg-transparent text-[12px] text-ink outline-none"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
               >
-                <option value="all">全部</option>
+                <option value="all">All</option>
                 {months.map((m) => (
                   <option key={m} value={m}>
                     {m}
@@ -211,11 +211,11 @@ export default function Gallery() {
           )}
 
           <button
-            className="inline-flex items-center gap-1 rounded-full border border-ink/10 bg-cream/70 px-2.5 py-1 text-coffee shadow-card transition hover:text-ink active:scale-95"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[16px] border border-ink/10 bg-cream/75 text-coffee/75 shadow-card backdrop-blur transition hover:text-ink active:scale-95"
             onClick={() => setSortAsc((v) => !v)}
-            title="切换正序 / 倒序"
+            title={sortAsc ? 'Oldest first' : 'Latest first'}
           >
-            <Sort width={13} height={13} /> {sortAsc ? '最早' : '最新'}
+            <Sort width={13} height={13} />
           </button>
         </div>
       )}
@@ -223,9 +223,9 @@ export default function Gallery() {
       {/* body */}
       <main className="mx-auto max-w-5xl px-4 py-6">
         {loading ? (
-          <div className={MASONRY}>
+          <div className={CARD_GRID}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="mb-5 break-inside-avoid rounded-[14px] bg-white p-3 pb-4 shadow-polaroid">
+              <div key={i} className="rounded-[14px] bg-white p-3 pb-4 shadow-polaroid">
                 <div className="skeleton rounded-[8px]" style={{ height: 120 + ((i * 37) % 110) }} />
                 <div className="skeleton mt-3 h-3 w-2/3 rounded" />
                 <div className="skeleton mt-2 h-3 w-1/2 rounded" />
@@ -245,7 +245,7 @@ export default function Gallery() {
             </p>
           </div>
         ) : view === 'album' ? (
-          <div className={MASONRY}>
+          <div className={CARD_GRID}>
             {albumEntries.map((entry, i) => (
               <EntryCard key={entry.id} entry={entry} index={i} draggable={false} {...cardProps} />
             ))}
@@ -262,7 +262,7 @@ export default function Gallery() {
                   </h2>
                   <span className="h-px flex-1 bg-ink/15" />
                 </div>
-                <div className={MASONRY}>
+                <div className={CARD_GRID}>
                   {group.items.map((entry, i) => (
                     <EntryCard key={entry.id} entry={entry} index={i} draggable={false} {...cardProps} />
                   ))}

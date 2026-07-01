@@ -1,0 +1,17 @@
+export const DECOR_ASSETS = [
+  'decor/manual-001-bear-standing.png',
+  'decor/manual-002-bear-head.png',
+  'decor/manual-003-green-heart-card.png',
+  'decor/manual-004-four-heart-card.png',
+  'decor/manual-005-dot-card.png',
+  'decor/manual-006-daisy-card-left.png',
+  'decor/manual-007-daisy-card-right.png',
+  'decor/manual-008-daisy-strip.png',
+  'decor/manual-009-checkered-tape.png',
+  'decor/manual-011-mushrooms.png',
+  'decor/manual-012-mushroom-postage.png',
+  'decor/manual-013-tulip-frame.png',
+  'decor/manual-014-tulip-book.png',
+  'decor/manual-015-teacup.png',
+  'decor/manual-017-yellow-tulips.png',
+] as const
