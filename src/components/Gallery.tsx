@@ -7,9 +7,23 @@ import EntryCard from './EntryCard'
 import UploadDialog from './UploadDialog'
 import AdminLogin from './AdminLogin'
 import Lightbox from './Lightbox'
-import { Plus, Paw, Logout, Grid, Clock, Calendar, Sort } from './icons'
+import ShoppingPanel from './ShoppingPanel'
+import {
+  Plus,
+  Paw,
+  Logout,
+  Grid,
+  Clock,
+  Calendar,
+  Sort,
+  MedicalCross,
+  DiaryTab,
+  ShoppingTab,
+  MedicalTab,
+} from './icons'
 
-type View = 'album' | 'timeline'
+type Section = 'diary' | 'shopping' | 'medical'
+type DiaryView = 'album' | 'timeline'
 
 const CARD_GRID = 'grid grid-cols-2 items-start gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 
@@ -20,7 +34,8 @@ export default function Gallery() {
   const [showUpload, setShowUpload] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [toDelete, setToDelete] = useState<Entry | null>(null)
-  const [view, setView] = useState<View>('album')
+  const [section, setSection] = useState<Section>('diary')
+  const [view, setView] = useState<DiaryView>('album')
   const [filterMonth, setFilterMonth] = useState<string>('all')
   const [sortAsc, setSortAsc] = useState(false) // false=最新在前(倒序)，true=最早在前(正序)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -95,6 +110,10 @@ export default function Gallery() {
     [view, albumEntries, timelineGroups],
   )
 
+  useEffect(() => {
+    if (!isAdmin && section !== 'diary') setSection('diary')
+  }, [isAdmin, section])
+
   const openLightbox = (entry: Entry) => {
     const i = displayFlat.findIndex((e) => e.id === entry.id)
     if (i >= 0) setLightboxIndex(i)
@@ -145,22 +164,13 @@ export default function Gallery() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {isAdmin ? (
-              <>
-                <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-rose text-white shadow-card transition hover:brightness-105 active:scale-95"
-                  onClick={() => setShowUpload(true)}
-                  title="Add"
-                >
-                  <Plus width={16} height={16} />
-                </button>
-                <button
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-cream text-coffee transition hover:text-ink active:scale-95"
-                  onClick={logoutAdmin}
-                  title="退出管理"
-                >
-                  <Logout width={16} height={16} />
-                </button>
-              </>
+              <button
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-cream text-coffee transition hover:text-ink active:scale-95"
+                onClick={logoutAdmin}
+                title="退出管理"
+              >
+                <Logout width={16} height={16} />
+              </button>
             ) : (
               <button
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-cream/60 text-coffee/55 transition hover:bg-cream hover:text-ink active:scale-95"
@@ -174,8 +184,8 @@ export default function Gallery() {
         </div>
       </header>
 
-      {/* toolbar: 视图切换 + 月份筛选 */}
-      {!loading && entries.length > 0 && (
+      {/* Diary toolbar: 视图切换 + 月份筛选 */}
+      {!loading && entries.length > 0 && section === 'diary' && (
         <div className="mx-auto mt-4 flex max-w-5xl flex-nowrap items-center justify-center gap-1.5 overflow-x-auto px-4 text-[12px] font-serif [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="inline-flex shrink-0 rounded-[16px] border border-ink/10 bg-cream/75 p-0.5 shadow-card backdrop-blur">
             <button
@@ -217,11 +227,21 @@ export default function Gallery() {
           >
             <Sort width={13} height={13} />
           </button>
+
+          {isAdmin && (
+            <button
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[16px] border border-rose/35 bg-rose/18 text-ink shadow-card backdrop-blur transition hover:bg-rose/25 active:scale-95"
+              onClick={() => setShowUpload(true)}
+              title="Add diary"
+            >
+              <Plus width={13} height={13} />
+            </button>
+          )}
         </div>
       )}
 
       {/* body */}
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 pb-28 pt-6">
         {loading ? (
           <div className={CARD_GRID}>
             {Array.from({ length: 8 }).map((_, i) => (
@@ -232,6 +252,14 @@ export default function Gallery() {
               </div>
             ))}
           </div>
+        ) : section === 'shopping' ? (
+          <ShoppingPanel />
+        ) : section === 'medical' ? (
+          <AdminOnlyPlaceholder
+            icon={<MedicalCross width={22} height={22} />}
+            title="Medical"
+            note="体检、疫苗、驱虫和用药记录可以放在这里。"
+          />
         ) : entries.length === 0 ? (
           <div className="py-24 text-center">
             <img
@@ -273,7 +301,7 @@ export default function Gallery() {
         )}
       </main>
 
-      <div className="h-10" />
+      <BottomNav section={section} isAdmin={isAdmin} onChange={setSection} />
 
       {showUpload && (
         <UploadDialog
@@ -316,5 +344,82 @@ export default function Gallery() {
         </div>
       )}
     </div>
+  )
+}
+
+function AdminOnlyPlaceholder({
+  icon,
+  title,
+  note,
+}: {
+  icon: React.ReactNode
+  title: string
+  note: string
+}) {
+  return (
+    <section className="mx-auto max-w-md py-16 text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[20px] border border-ink/10 bg-cream/80 text-coffee shadow-card">
+        {icon}
+      </div>
+      <h2 className="font-script text-[34px] leading-tight text-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-coffee/70">{note}</p>
+    </section>
+  )
+}
+
+function BottomNav({
+  section,
+  isAdmin,
+  onChange,
+}: {
+  section: Section
+  isAdmin: boolean
+  onChange: (section: Section) => void
+}) {
+  const items: Array<{ id: Section; label: string; icon: React.ReactNode }> = [
+    { id: 'diary', label: 'Diary', icon: <DiaryTab width={19} height={19} /> },
+    ...(isAdmin
+      ? [
+          { id: 'shopping' as const, label: 'Shopping', icon: <ShoppingTab width={19} height={19} /> },
+          { id: 'medical' as const, label: 'Medical', icon: <MedicalTab width={19} height={19} /> },
+        ]
+      : []),
+  ]
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-paper/90 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 shadow-[0_-10px_30px_rgba(74,64,54,.12)] backdrop-blur">
+      <div
+        className="mx-auto grid max-w-sm gap-1 rounded-[22px] border border-ink/10 bg-white/55 p-1 shadow-card"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
+        {items.map((item) => {
+          const active = section === item.id
+          return (
+            <button
+              key={item.id}
+              className={`relative flex h-12 flex-col items-center justify-center gap-0.5 rounded-[17px] font-serif text-[11px] transition active:scale-95 ${
+                active ? 'bg-cream/80 text-ink shadow-[inset_0_0_0_1px_rgba(74,64,54,.08)]' : 'text-coffee/60 hover:text-ink'
+              }`}
+              onClick={() => onChange(item.id)}
+            >
+              <span
+                className={`flex h-6 w-8 items-center justify-center rounded-full transition ${
+                  active ? 'bg-rose/18 text-rose' : 'bg-transparent'
+                }`}
+              >
+                {item.icon}
+              </span>
+              <span className={active ? 'font-medium' : ''}>{item.label}</span>
+              {active && (
+                <span className="absolute bottom-1.5 h-2 w-9">
+                  <span className="absolute left-1 top-1 h-1.5 w-7 -rotate-2 rounded-full bg-rose/45" />
+                  <span className="absolute left-0 top-0.5 h-1.5 w-9 rotate-1 rounded-full bg-rose/35" />
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </nav>
   )
 }

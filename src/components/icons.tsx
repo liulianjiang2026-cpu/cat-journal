@@ -85,6 +85,44 @@ export const Grid = (p: SVGProps<SVGSVGElement>) => (
     <rect x="14" y="14" width="7" height="7" rx="1" />
   </svg>
 )
+export const BookOpen = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 7v14" />
+    <path d="M3 5a3 3 0 0 1 3-2h6v18H6a3 3 0 0 0-3 2Z" />
+    <path d="M21 5a3 3 0 0 0-3-2h-6v18h6a3 3 0 0 1 3 2Z" />
+  </svg>
+)
+export const ShoppingBag = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M6 8h12l1 13H5Z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+  </svg>
+)
+export const MedicalCross = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7Z" />
+  </svg>
+)
+export const DiaryTab = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base({ strokeWidth: 2.85, ...p })}>
+    <path d="M5 6h14v13H5Z" />
+    <path d="M8 9h8" />
+    <path d="M8 13h5" />
+  </svg>
+)
+export const ShoppingTab = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base({ strokeWidth: 2.85, ...p })}>
+    <path d="M4 10h16l-2 10H6Z" />
+    <path d="M8 10c0-3 1.5-5 4-5s4 2 4 5" />
+  </svg>
+)
+export const MedicalTab = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base({ strokeWidth: 2.85, ...p })}>
+    <path d="M6 12h12" />
+    <path d="M12 6v12" />
+    <path d="M5 5h14v14H5Z" />
+  </svg>
+)
 export const Clock = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="9" />

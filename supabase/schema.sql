@@ -15,8 +15,24 @@ create table if not exists public.entries (
 
 create index if not exists entries_sort_idx on public.entries (sort_order);
 
+-- 购物记录：仅管理员可读写，用于记录历史购买支出
+create table if not exists public.purchases (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  category    text not null default '其他',
+  spec        text not null default '',
+  note        text not null default '',
+  amount      numeric(10,2) not null default 0,
+  date        date not null default current_date,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists purchases_date_idx on public.purchases (date desc, created_at desc);
+
 -- 2) 开启行级安全（RLS）
 alter table public.entries enable row level security;
+alter table public.purchases enable row level security;
 
 -- 读：所有人可读（访客答题门在前端控制浏览入口）
 drop policy if exists "entries_read_all" on public.entries;
@@ -28,6 +44,14 @@ create policy "entries_read_all"
 drop policy if exists "entries_write_admin" on public.entries;
 create policy "entries_write_admin"
   on public.entries for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- 购物记录：只有管理员登录后可读写，访客完全不可见
+drop policy if exists "purchases_admin_all" on public.purchases;
+create policy "purchases_admin_all"
+  on public.purchases for all
   to authenticated
   using (true)
   with check (true);
