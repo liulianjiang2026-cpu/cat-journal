@@ -48,6 +48,18 @@ function yearKey(date: string) {
   return date.slice(0, 4)
 }
 
+function shoppingErrorMessage(err: unknown, fallback: string) {
+  const error = err as { code?: string; message?: string } | null
+  const message = error?.message || ''
+  if (error?.code === '42P01' || message.includes('purchases') || message.includes('does not exist')) {
+    return 'Supabase 还没建 purchases 表喵'
+  }
+  if (error?.code === '42501' || message.includes('row-level security') || message.includes('permission denied')) {
+    return '购物记录权限没放开喵'
+  }
+  return fallback
+}
+
 export default function ShoppingPanel() {
   const [records, setRecords] = useState<PurchaseRecord[]>([])
   const [form, setForm] = useState<FormState>(() => emptyForm())
@@ -67,7 +79,7 @@ export default function ShoppingPanel() {
       })
       .catch((err) => {
         console.error(err)
-        if (alive) setError('购物记录加载失败')
+        if (alive) setError(shoppingErrorMessage(err, '购物记录加载失败喵'))
       })
       .finally(() => {
         if (alive) setLoading(false)
@@ -129,7 +141,7 @@ export default function ShoppingPanel() {
       setFormOpen(false)
     } catch (err) {
       console.error(err)
-      setError('保存失败喵')
+      setError(shoppingErrorMessage(err, '保存失败喵'))
     } finally {
       setSaving(false)
     }
@@ -143,7 +155,7 @@ export default function ShoppingPanel() {
     } catch (err) {
       console.error(err)
       setRecords(previous)
-      setError('删除失败')
+      setError(shoppingErrorMessage(err, '删除失败喵'))
     }
   }
 
@@ -391,7 +403,7 @@ function PurchaseCard({
       setMessage('喵！')
     } catch (err) {
       console.error(err)
-      setMessage('保存失败喵')
+      setMessage(shoppingErrorMessage(err, '保存失败喵'))
     } finally {
       setBusy(false)
     }
@@ -404,7 +416,7 @@ function PurchaseCard({
       await onDelete(row.id)
     } catch (err) {
       console.error(err)
-      setMessage('删除失败喵')
+      setMessage(shoppingErrorMessage(err, '删除失败喵'))
       setBusy(false)
     }
   }
