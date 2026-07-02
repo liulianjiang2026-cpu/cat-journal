@@ -8,6 +8,7 @@ import UploadDialog from './UploadDialog'
 import AdminLogin from './AdminLogin'
 import Lightbox from './Lightbox'
 import ShoppingPanel from './ShoppingPanel'
+import MedicalPanel from './MedicalPanel'
 import {
   Plus,
   Paw,
@@ -16,7 +17,6 @@ import {
   Clock,
   Calendar,
   Sort,
-  MedicalCross,
   DiaryTab,
   ShoppingTab,
   MedicalTab,
@@ -255,11 +255,7 @@ export default function Gallery() {
         ) : section === 'shopping' ? (
           <ShoppingPanel />
         ) : section === 'medical' ? (
-          <AdminOnlyPlaceholder
-            icon={<MedicalCross width={22} height={22} />}
-            title="Medical"
-            note="体检、疫苗、驱虫和用药记录可以放在这里。"
-          />
+          <MedicalPanel />
         ) : entries.length === 0 ? (
           <div className="py-24 text-center">
             <img
@@ -344,26 +340,6 @@ export default function Gallery() {
         </div>
       )}
     </div>
-  )
-}
-
-function AdminOnlyPlaceholder({
-  icon,
-  title,
-  note,
-}: {
-  icon: React.ReactNode
-  title: string
-  note: string
-}) {
-  return (
-    <section className="mx-auto max-w-md py-16 text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[20px] border border-ink/10 bg-cream/80 text-coffee shadow-card">
-        {icon}
-      </div>
-      <h2 className="font-script text-[34px] leading-tight text-ink">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-coffee/70">{note}</p>
-    </section>
   )
 }
 

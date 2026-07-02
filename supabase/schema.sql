@@ -30,9 +30,18 @@ create table if not exists public.purchases (
 
 create index if not exists purchases_date_idx on public.purchases (date desc, created_at desc);
 
+-- 小型应用设置：医疗页倒计时等可编辑配置
+create table if not exists public.app_settings (
+  key         text primary key,
+  value       jsonb not null default '{}'::jsonb,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
 -- 2) 开启行级安全（RLS）
 alter table public.entries enable row level security;
 alter table public.purchases enable row level security;
+alter table public.app_settings enable row level security;
 
 -- 读：所有人可读（访客答题门在前端控制浏览入口）
 drop policy if exists "entries_read_all" on public.entries;
@@ -52,6 +61,14 @@ create policy "entries_write_admin"
 drop policy if exists "purchases_admin_all" on public.purchases;
 create policy "purchases_admin_all"
   on public.purchases for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- 应用设置：只有管理员登录后可读写
+drop policy if exists "app_settings_admin_all" on public.app_settings;
+create policy "app_settings_admin_all"
+  on public.app_settings for all
   to authenticated
   using (true)
   with check (true);
