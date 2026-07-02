@@ -1,5 +1,12 @@
-import { useMemo, useState } from 'react'
-import { PURCHASE_CATEGORIES, listPurchases, savePurchases, type PurchaseCategory, type PurchaseRecord } from '../lib/shopping'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  PURCHASE_CATEGORIES,
+  createPurchase,
+  listPurchases,
+  removePurchase,
+  type PurchaseCategory,
+  type PurchaseRecord,
+} from '../lib/shopping'
 import { Plus, Trash, ShoppingBag, X, Filter } from './icons'
 
 interface FormState {
@@ -37,11 +44,32 @@ function yearKey(date: string) {
 }
 
 export default function ShoppingPanel() {
-  const [records, setRecords] = useState<PurchaseRecord[]>(() => listPurchases())
+  const [records, setRecords] = useState<PurchaseRecord[]>([])
   const [form, setForm] = useState<FormState>(() => emptyForm())
   const [error, setError] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState<'all' | PurchaseCategory>('all')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    listPurchases()
+      .then((rows) => {
+        if (alive) setRecords(rows)
+      })
+      .catch((err) => {
+        console.error(err)
+        if (alive) setError('购物记录加载失败')
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const visibleRecords = useMemo(
     () => (filterCategory === 'all' ? records : records.filter((row) => row.category === filterCategory)),
@@ -63,14 +91,13 @@ export default function ShoppingPanel() {
     )
   }, [visibleRecords])
 
-  function update(next: PurchaseRecord[]) {
-    const sorted = [...next].sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at))
-    setRecords(sorted)
-    savePurchases(sorted)
+  function sortRecords(next: PurchaseRecord[]) {
+    return [...next].sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at))
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (saving) return
     const amount = Number(form.amount)
     if (!form.name.trim()) {
       setError('先填一下名称')
@@ -80,28 +107,38 @@ export default function ShoppingPanel() {
       setError('金额要填数字')
       return
     }
-    const now = new Date().toISOString()
-    update([
-      {
-        id: crypto.randomUUID(),
+    setSaving(true)
+    setError('')
+    try {
+      const created = await createPurchase({
         name: form.name.trim(),
         category: form.category,
         spec: form.spec.trim(),
         note: form.note.trim(),
         amount,
         date: form.date || today(),
-        created_at: now,
-        updated_at: now,
-      },
-      ...records,
-    ])
-    setForm(emptyForm())
-    setError('')
-    setFormOpen(false)
+      })
+      setRecords((prev) => sortRecords([created, ...prev]))
+      setForm(emptyForm())
+      setFormOpen(false)
+    } catch (err) {
+      console.error(err)
+      setError('保存失败，先确认 Supabase 已运行 purchases 建表脚本')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  function remove(id: string) {
-    update(records.filter((row) => row.id !== id))
+  async function remove(id: string) {
+    const previous = records
+    setRecords((prev) => prev.filter((row) => row.id !== id))
+    try {
+      await removePurchase(id)
+    } catch (err) {
+      console.error(err)
+      setRecords(previous)
+      setError('删除失败')
+    }
   }
 
   return (
@@ -231,15 +268,17 @@ export default function ShoppingPanel() {
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <p className="min-h-5 text-xs text-rose">{error}</p>
-            <button className="btn-soft shrink-0" type="submit">
-              <Plus width={15} height={15} /> Add
+            <button className="btn-soft shrink-0 disabled:opacity-55" type="submit" disabled={saving}>
+              <Plus width={15} height={15} /> {saving ? 'Saving' : 'Add'}
             </button>
           </div>
         </form>
       )}
 
       <div className="space-y-3">
-        {records.length === 0 ? (
+        {loading ? (
+          <EmptyState face="ฅ^•ﻌ•^ฅ" title="Loading" onAdd={() => setFormOpen(true)} />
+        ) : records.length === 0 ? (
           <EmptyState face="ฅ^•ﻌ•^ฅ" title="No records" onAdd={() => setFormOpen(true)} />
         ) : visibleRecords.length === 0 ? (
           <EmptyState face="(=･ｪ･=)" title="No matches" onAdd={() => setFormOpen(true)} />
