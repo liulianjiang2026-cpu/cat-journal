@@ -123,6 +123,38 @@ export async function createPurchase(input: PurchaseInput): Promise<PurchaseReco
   return record
 }
 
+export async function updatePurchase(id: string, input: PurchaseInput): Promise<PurchaseRecord> {
+  const now = new Date().toISOString()
+  if (!isCloud) {
+    const next = listLocalPurchases().map((row) =>
+      row.id === id ? { ...row, ...input, updated_at: now } : row,
+    )
+    saveLocalPurchases(next)
+    const updated = next.find((row) => row.id === id)
+    if (!updated) throw new Error('购物记录不存在')
+    return updated
+  }
+
+  const { data, error } = await client()
+    .from('purchases')
+    .update({
+      name: input.name,
+      category: input.category,
+      spec: input.spec,
+      note: input.note,
+      amount: input.amount,
+      date: input.date,
+      updated_at: now,
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  const record = normalizeRecord(data)
+  if (!record) throw new Error('购物记录返回数据异常')
+  return record
+}
+
 export async function removePurchase(id: string): Promise<void> {
   if (!isCloud) {
     saveLocalPurchases(listLocalPurchases().filter((row) => row.id !== id))

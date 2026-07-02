@@ -4,10 +4,12 @@ import {
   createPurchase,
   listPurchases,
   removePurchase,
+  updatePurchase,
   type PurchaseCategory,
+  type PurchaseInput,
   type PurchaseRecord,
 } from '../lib/shopping'
-import { Plus, Trash, ShoppingBag, X, Filter } from './icons'
+import { Plus, Trash, ShoppingBag, X, Filter, Pencil } from './icons'
 
 interface FormState {
   name: string
@@ -35,6 +37,9 @@ const money = new Intl.NumberFormat('zh-CN', {
   maximumFractionDigits: 2,
 })
 
+const purchaseField =
+  'w-full rounded-[15px] border border-white/80 bg-[#fffaf0] px-3 py-2.5 font-serif text-[15px] text-ink shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)] outline-none transition placeholder:text-coffee/35 focus:border-coffee/25 focus:bg-white focus:ring-2 focus:ring-rose/12'
+
 function monthKey(date: string) {
   return date.slice(0, 7)
 }
@@ -51,6 +56,7 @@ export default function ShoppingPanel() {
   const [filterCategory, setFilterCategory] = useState<'all' | PurchaseCategory>('all')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [editMode, setEditMode] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -100,11 +106,11 @@ export default function ShoppingPanel() {
     if (saving) return
     const amount = Number(form.amount)
     if (!form.name.trim()) {
-      setError('先填一下名称')
+      setError('喵喵？')
       return
     }
     if (!Number.isFinite(amount) || amount < 0) {
-      setError('金额要填数字')
+      setError('金额喵喵？')
       return
     }
     setSaving(true)
@@ -123,7 +129,7 @@ export default function ShoppingPanel() {
       setFormOpen(false)
     } catch (err) {
       console.error(err)
-      setError('保存失败，先确认 Supabase 已运行 purchases 建表脚本')
+      setError('保存失败喵')
     } finally {
       setSaving(false)
     }
@@ -175,6 +181,19 @@ export default function ShoppingPanel() {
         )}
         {!formOpen && (
           <button
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border shadow-[0_8px_18px_rgba(74,64,54,.09),inset_0_0_0_1px_rgba(74,64,54,.04)] transition active:scale-95 ${
+              editMode
+                ? 'border-rose/35 bg-rose/18 text-rose'
+                : 'border-white/80 bg-[#fffaf0] text-coffee/65 hover:text-rose'
+            }`}
+            onClick={() => setEditMode((value) => !value)}
+            title={editMode ? 'Done editing' : 'Edit purchases'}
+          >
+            <Pencil width={15} height={15} />
+          </button>
+        )}
+        {!formOpen && (
+          <button
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border border-white/80 bg-[#fffaf0] text-coffee/65 shadow-[0_8px_18px_rgba(74,64,54,.09),inset_0_0_0_1px_rgba(74,64,54,.04)] transition hover:text-rose active:scale-95"
             onClick={() => setFormOpen(true)}
             title="Add purchase"
@@ -186,17 +205,22 @@ export default function ShoppingPanel() {
 
       {formOpen && (
         <form
-          className="rounded-[18px] border border-ink/10 bg-white/82 p-4 shadow-card backdrop-blur animate-pop"
+          className="relative overflow-hidden rounded-[22px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_14px_30px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)] animate-pop"
           onSubmit={submit}
         >
-          <div className="mb-3 flex items-center justify-between gap-3 text-ink">
+          <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-rose/40" />
+          <div className="mb-4 flex items-center justify-between gap-3 text-ink">
             <div className="flex items-center gap-2">
-              <ShoppingBag width={18} height={18} />
-              <h2 className="font-serif text-base">Purchase Record</h2>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose/12 text-rose">
+                <ShoppingBag width={17} height={17} />
+              </span>
+              <div>
+                <h2 className="font-script text-[27px] leading-none text-ink">New Purchase</h2>
+              </div>
             </div>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-coffee/55 transition hover:bg-cream/70 hover:text-ink"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-coffee/45 transition hover:bg-white/80 hover:text-ink"
               onClick={() => {
                 setFormOpen(false)
                 setError('')
@@ -207,18 +231,18 @@ export default function ShoppingPanel() {
             </button>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="名称">
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <Field label="Name">
               <input
-                className="field"
+                className={purchaseField}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="比如：渴望六种鱼"
+                placeholder="喵喵喵"
               />
             </Field>
-            <Field label="类型">
+            <Field label="Type">
               <select
-                className="field"
+                className={purchaseField}
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as PurchaseCategory })}
               >
@@ -229,17 +253,17 @@ export default function ShoppingPanel() {
                 ))}
               </select>
             </Field>
-            <Field label="规格">
+            <Field label="Spec">
               <input
-                className="field"
+                className={purchaseField}
                 value={form.spec}
                 onChange={(e) => setForm({ ...form, spec: e.target.value })}
-                placeholder="比如：5.4kg / 12袋"
+                placeholder="喵喵"
               />
             </Field>
-            <Field label="金额">
+            <Field label="Amount">
               <input
-                className="field"
+                className={purchaseField}
                 type="number"
                 min="0"
                 step="0.01"
@@ -248,20 +272,20 @@ export default function ShoppingPanel() {
                 placeholder="0.00"
               />
             </Field>
-            <Field label="日期">
+            <Field label="Date">
               <input
-                className="field"
+                className={purchaseField}
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
               />
             </Field>
-            <Field label="备注">
+            <Field label="Note">
               <input
-                className="field"
+                className={purchaseField}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
-                placeholder="渠道、口味、优惠等"
+                placeholder="喵喵喵喵"
               />
             </Field>
           </div>
@@ -269,7 +293,7 @@ export default function ShoppingPanel() {
           <div className="mt-4 flex items-center justify-between gap-3">
             <p className="min-h-5 text-xs text-rose">{error}</p>
             <button className="btn-soft shrink-0 disabled:opacity-55" type="submit" disabled={saving}>
-              <Plus width={15} height={15} /> {saving ? 'Saving' : 'Add'}
+              <Plus width={15} height={15} /> {saving ? 'Saving' : 'Save'}
             </button>
           </div>
         </form>
@@ -277,44 +301,23 @@ export default function ShoppingPanel() {
 
       <div className="space-y-3">
         {loading ? (
-          <EmptyState face="ฅ^•ﻌ•^ฅ" title="Loading" onAdd={() => setFormOpen(true)} />
+          <EmptyState face="ฅ^•ﻌ•^ฅ" title="喵喵喵" onAdd={() => setFormOpen(true)} />
         ) : records.length === 0 ? (
-          <EmptyState face="ฅ^•ﻌ•^ฅ" title="No records" onAdd={() => setFormOpen(true)} />
+          <EmptyState face="ฅ^•ﻌ•^ฅ" title="喵喵喵" onAdd={() => setFormOpen(true)} />
         ) : visibleRecords.length === 0 ? (
-          <EmptyState face="(=･ｪ･=)" title="No matches" onAdd={() => setFormOpen(true)} />
+          <EmptyState face="(=･ｪ･=)" title="喵？" onAdd={() => setFormOpen(true)} />
         ) : (
           visibleRecords.map((row) => (
-            <article
+            <PurchaseCard
               key={row.id}
-              className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)]"
-            >
-              <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-rose/45" />
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="break-words font-serif text-base text-ink">{row.name}</h3>
-                    <span className="rounded-full bg-rose/12 px-2 py-0.5 text-xs text-rose">{row.category}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-coffee/55">{row.date}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-serif text-base text-ink">{money.format(row.amount)}</p>
-                  <button
-                    className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-coffee/38 transition hover:bg-cream/70 hover:text-rose"
-                    onClick={() => remove(row.id)}
-                    title="删除"
-                  >
-                    <Trash width={14} height={14} />
-                  </button>
-                </div>
-              </div>
-              {(row.spec || row.note) && (
-                <div className="mt-3 grid gap-2 text-sm text-coffee/68 sm:grid-cols-2">
-                  {row.spec && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">规格：{row.spec}</p>}
-                  {row.note && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">备注：{row.note}</p>}
-                </div>
-              )}
-            </article>
+              row={row}
+              editMode={editMode}
+              onDelete={remove}
+              onSave={async (id, input) => {
+                const updated = await updatePurchase(id, input)
+                setRecords((prev) => sortRecords(prev.map((item) => (item.id === id ? updated : item))))
+              }}
+            />
           ))
         )}
       </div>
@@ -328,6 +331,162 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <p className="truncate font-serif text-[11px] text-coffee/58">{label}</p>
       <p className="mt-1 truncate font-serif text-[15px] text-ink sm:text-lg">{money.format(value)}</p>
     </div>
+  )
+}
+
+function formFromRecord(row: PurchaseRecord): FormState {
+  return {
+    name: row.name,
+    category: row.category,
+    spec: row.spec,
+    note: row.note,
+    amount: String(row.amount),
+    date: row.date,
+  }
+}
+
+function toPurchaseInput(form: FormState): PurchaseInput | null {
+  const amount = Number(form.amount)
+  if (!form.name.trim() || !Number.isFinite(amount) || amount < 0) return null
+  return {
+    name: form.name.trim(),
+    category: form.category,
+    spec: form.spec.trim(),
+    note: form.note.trim(),
+    amount,
+    date: form.date || today(),
+  }
+}
+
+function PurchaseCard({
+  row,
+  editMode,
+  onSave,
+  onDelete,
+}: {
+  row: PurchaseRecord
+  editMode: boolean
+  onSave: (id: string, input: PurchaseInput) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+}) {
+  const [draft, setDraft] = useState<FormState>(() => formFromRecord(row))
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    setDraft(formFromRecord(row))
+    setMessage('')
+  }, [row])
+
+  async function save() {
+    const input = toPurchaseInput(draft)
+    if (!input) {
+      setMessage('喵喵？')
+      return
+    }
+    setBusy(true)
+    setMessage('')
+    try {
+      await onSave(row.id, input)
+      setMessage('喵！')
+    } catch (err) {
+      console.error(err)
+      setMessage('保存失败喵')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteRow() {
+    setBusy(true)
+    setMessage('')
+    try {
+      await onDelete(row.id)
+    } catch (err) {
+      console.error(err)
+      setMessage('删除失败喵')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <article className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)]">
+      <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-rose/45" />
+      {!editMode ? (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="break-words font-serif text-base text-ink">{row.name}</h3>
+                <span className="rounded-full bg-rose/12 px-2 py-0.5 text-xs text-rose">{row.category}</span>
+              </div>
+              <p className="mt-1 text-xs text-coffee/55">{row.date}</p>
+            </div>
+            <p className="shrink-0 text-right font-serif text-base text-ink">{money.format(row.amount)}</p>
+          </div>
+          {(row.spec || row.note) && (
+            <div className="mt-3 grid gap-2 text-sm text-coffee/68 sm:grid-cols-2">
+              {row.spec && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">规格：{row.spec}</p>}
+              {row.note && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">备注：{row.note}</p>}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="space-y-3">
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <Field label="Name">
+              <input className={purchaseField} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            </Field>
+            <Field label="Type">
+              <select
+                className={purchaseField}
+                value={draft.category}
+                onChange={(e) => setDraft({ ...draft, category: e.target.value as PurchaseCategory })}
+              >
+                {PURCHASE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Spec">
+              <input className={purchaseField} value={draft.spec} onChange={(e) => setDraft({ ...draft, spec: e.target.value })} />
+            </Field>
+            <Field label="Amount">
+              <input
+                className={purchaseField}
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.amount}
+                onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
+              />
+            </Field>
+            <Field label="Date">
+              <input className={purchaseField} type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
+            </Field>
+            <Field label="Note">
+              <input className={purchaseField} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
+            </Field>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="min-h-5 text-xs text-coffee/55">{message}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-rose/25 bg-rose/10 text-rose transition hover:bg-rose/18 disabled:opacity-50"
+                onClick={deleteRow}
+                disabled={busy}
+                title="Delete"
+              >
+                <Trash width={14} height={14} />
+              </button>
+              <button className="btn-soft h-8 px-3 text-xs disabled:opacity-50" onClick={save} disabled={busy}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </article>
   )
 }
 
@@ -349,7 +508,7 @@ function EmptyState({ face, title, onAdd }: { face: string; title: string; onAdd
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs text-coffee/65">{label}</span>
+      <span className="mb-1 block font-serif text-[11px] text-coffee/48">{label}</span>
       {children}
     </label>
   )
