@@ -56,6 +56,7 @@ export default function MedicalPanel() {
   const [dewormedAt, setDewormedAt] = useState('2026-07-02')
   const [draftDate, setDraftDate] = useState('2026-07-02')
   const [editing, setEditing] = useState(false)
+  const [actionsOpen, setActionsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -94,6 +95,7 @@ export default function MedicalPanel() {
       setDewormedAt(saved.dewormed_at)
       setDraftDate(saved.dewormed_at)
       setEditing(false)
+      setActionsOpen(false)
       setMessage('喵！')
     } catch (err) {
       console.error(err)
@@ -114,6 +116,7 @@ export default function MedicalPanel() {
           unit="days"
           note={`Next ${formatDate(vaccine.target)}`}
           detail="Annual booster"
+          onClick={() => setActionsOpen(false)}
         />
         <HealthCard
           accent="bg-sage/55"
@@ -123,6 +126,7 @@ export default function MedicalPanel() {
           unit="days"
           note={`Since ${formatDate(STERILIZED_AT)}`}
           detail="Growing steady"
+          onClick={() => setActionsOpen(false)}
         />
         <HealthCard
           accent="bg-sky/50"
@@ -132,10 +136,14 @@ export default function MedicalPanel() {
           unit="days"
           note={`Last ${formatDate(dewormedAt)}`}
           detail="After treatment"
-          action={
+          onClick={() => {
+            if (!editing) setActionsOpen((value) => !value)
+          }}
+          action={actionsOpen && !editing ? (
             <button
-              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-coffee/38 transition hover:bg-white/70 hover:text-ink active:scale-95"
-              onClick={() => {
+              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/72 text-coffee/55 shadow-[0_5px_14px_rgba(74,64,54,.10),inset_0_0_0_1px_rgba(74,64,54,.04)] transition hover:text-ink active:scale-95 animate-pop"
+              onClick={(event) => {
+                event.stopPropagation()
                 setDraftDate(dewormedAt)
                 setEditing(true)
                 setMessage('')
@@ -144,7 +152,7 @@ export default function MedicalPanel() {
             >
               <Pencil width={12} height={12} />
             </button>
-          }
+          ) : null}
         />
       </div>
 
@@ -160,6 +168,7 @@ export default function MedicalPanel() {
               className="flex h-8 w-8 items-center justify-center rounded-full text-coffee/45 transition hover:bg-white/80 hover:text-ink"
               onClick={() => {
                 setEditing(false)
+                setActionsOpen(false)
                 setDraftDate(dewormedAt)
                 setMessage('')
               }}
@@ -199,6 +208,7 @@ function HealthCard({
   note,
   detail,
   action,
+  onClick,
 }: {
   accent: string
   icon: React.ReactNode
@@ -208,9 +218,15 @@ function HealthCard({
   note: string
   detail: string
   action?: React.ReactNode
+  onClick?: () => void
 }) {
   return (
-    <article className="relative min-h-[168px] overflow-hidden rounded-[22px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_14px_30px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)]">
+    <article
+      className={`relative min-h-[168px] overflow-hidden rounded-[22px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_14px_30px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)] ${
+        onClick ? 'cursor-pointer transition active:scale-[0.99]' : ''
+      }`}
+      onClick={onClick}
+    >
       <span className={`absolute left-0 top-5 h-14 w-1.5 rounded-r-full ${accent}`} />
       <span className="absolute -right-6 -top-7 h-24 w-24 rounded-full bg-white/45" />
       {action}
