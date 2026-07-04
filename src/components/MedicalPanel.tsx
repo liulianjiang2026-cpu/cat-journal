@@ -98,8 +98,8 @@ export default function MedicalPanel() {
   const [actionsOpen, setActionsOpen] = useState(false)
   const [medicalCosts, setMedicalCosts] = useState<PurchaseRecord[]>([])
   const [costForm, setCostForm] = useState<CostFormState>(() => emptyCostForm())
-  const [costActionsOpen, setCostActionsOpen] = useState(false)
   const [costFormOpen, setCostFormOpen] = useState(false)
+  const [costEditMode, setCostEditMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [costSaving, setCostSaving] = useState(false)
@@ -172,7 +172,6 @@ export default function MedicalPanel() {
       setMedicalCosts((prev) => sortMedicalCosts([created, ...prev]))
       setCostForm(emptyCostForm())
       setCostFormOpen(false)
-      setCostActionsOpen(false)
     } catch (err) {
       console.error(err)
       setMessage(healthErrorMessage(err, '保存失败喵'))
@@ -206,7 +205,6 @@ export default function MedicalPanel() {
           detail="Annual booster"
           onClick={() => {
             setActionsOpen(false)
-            setCostActionsOpen(false)
           }}
         />
         <HealthCard
@@ -219,7 +217,6 @@ export default function MedicalPanel() {
           detail="Growing steady"
           onClick={() => {
             setActionsOpen(false)
-            setCostActionsOpen(false)
           }}
         />
         <HealthCard
@@ -231,7 +228,6 @@ export default function MedicalPanel() {
           note={`Last ${formatDate(dewormedAt)}`}
           detail="After treatment"
           onClick={() => {
-            setCostActionsOpen(false)
             if (!editing) setActionsOpen((value) => !value)
           }}
           action={actionsOpen && !editing ? (
@@ -289,19 +285,37 @@ export default function MedicalPanel() {
       )}
 
       <section className="space-y-3">
-        <ActionCard
-          open={costActionsOpen && !costFormOpen}
-          onClick={() => {
-            if (!costFormOpen) setCostActionsOpen((value) => !value)
-          }}
-          onAdd={(event) => {
-            event.stopPropagation()
-            setCostForm(emptyCostForm())
-            setCostFormOpen(true)
-            setCostActionsOpen(false)
-            setMessage('')
-          }}
-        />
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-script text-[30px] leading-none text-ink">Medical Record</h2>
+          </div>
+          {!costFormOpen && (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                className={`flex h-10 w-10 items-center justify-center rounded-[18px] border shadow-[0_8px_18px_rgba(74,64,54,.09),inset_0_0_0_1px_rgba(74,64,54,.04)] transition active:scale-95 ${
+                  costEditMode
+                    ? 'border-sage/40 bg-sage/22 text-sage'
+                    : 'border-white/80 bg-[#fffaf0] text-coffee/65 hover:text-sage'
+                }`}
+                onClick={() => setCostEditMode((value) => !value)}
+                title={costEditMode ? 'Done editing' : 'Edit medical records'}
+              >
+                <Pencil width={15} height={15} />
+              </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-[18px] border border-white/80 bg-[#fffaf0] text-coffee/65 shadow-[0_8px_18px_rgba(74,64,54,.09),inset_0_0_0_1px_rgba(74,64,54,.04)] transition hover:text-sage active:scale-95"
+                onClick={() => {
+                  setCostForm(emptyCostForm())
+                  setCostFormOpen(true)
+                  setMessage('')
+                }}
+                title="New medical record"
+              >
+                <Plus width={15} height={15} />
+              </button>
+            </div>
+          )}
+        </div>
 
         {costFormOpen && (
           <form
@@ -340,6 +354,7 @@ export default function MedicalPanel() {
                   className={costField}
                   value={costForm.event}
                   onChange={(e) => setCostForm({ ...costForm, event: e.target.value })}
+                  placeholder="喵喵喵"
                 />
               </Field>
               <Field label="Amount">
@@ -358,6 +373,7 @@ export default function MedicalPanel() {
                   className={costField}
                   value={costForm.note}
                   onChange={(e) => setCostForm({ ...costForm, note: e.target.value })}
+                  placeholder="喵喵喵"
                 />
               </Field>
             </div>
@@ -372,7 +388,7 @@ export default function MedicalPanel() {
         {medicalCosts.length > 0 && (
           <div className="space-y-3">
             {medicalCosts.map((record) => (
-              <MedicalCostCard key={record.id} record={record} onDelete={deleteCost} />
+              <MedicalCostCard key={record.id} record={record} editMode={costEditMode} onDelete={deleteCost} />
             ))}
           </div>
         )}
@@ -383,44 +399,15 @@ export default function MedicalPanel() {
   )
 }
 
-function ActionCard({
-  open,
-  onClick,
-  onAdd,
+function MedicalCostCard({
+  record,
+  editMode,
+  onDelete,
 }: {
-  open: boolean
-  onClick: () => void
-  onAdd: (event: React.MouseEvent<HTMLButtonElement>) => void
+  record: PurchaseRecord
+  editMode: boolean
+  onDelete: (id: string) => void
 }) {
-  return (
-    <article
-      className="relative min-h-[96px] cursor-pointer overflow-hidden rounded-[22px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.11),inset_0_0_0_1px_rgba(74,64,54,.045)] transition active:scale-[0.99]"
-      onClick={onClick}
-    >
-      <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-sage/60" />
-      {open && (
-        <button
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/72 text-coffee/55 shadow-[0_5px_14px_rgba(74,64,54,.10),inset_0_0_0_1px_rgba(74,64,54,.04)] transition hover:text-ink active:scale-95 animate-pop"
-          onClick={onAdd}
-          title="New medical record"
-        >
-          <Plus width={12} height={12} />
-        </button>
-      )}
-      <div className="flex items-center gap-3 text-coffee/65">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">
-          <MedicalCross width={18} height={18} />
-        </span>
-        <div>
-          <p className="font-script text-[28px] leading-none text-ink">Medical Record</p>
-          <p className="mt-1 font-serif text-xs text-coffee/48">Tap to add a record and sync it to Shopping</p>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function MedicalCostCard({ record, onDelete }: { record: PurchaseRecord; onDelete: (id: string) => void }) {
   return (
     <article className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.12),inset_0_0_0_1px_rgba(74,64,54,.045)]">
       <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-sage/60" />
@@ -434,13 +421,15 @@ function MedicalCostCard({ record, onDelete }: { record: PurchaseRecord; onDelet
         </div>
         <div className="flex shrink-0 items-start gap-2">
           <p className="text-right font-serif text-base text-ink">{money.format(record.amount)}</p>
-          <button
-            className="flex h-7 w-7 items-center justify-center rounded-full text-coffee/35 transition hover:bg-rose/12 hover:text-rose active:scale-95"
-            onClick={() => onDelete(record.id)}
-            title="Delete"
-          >
-            <Trash width={13} height={13} />
-          </button>
+          {editMode && (
+            <button
+              className="flex h-7 w-7 items-center justify-center rounded-full text-coffee/35 transition hover:bg-rose/12 hover:text-rose active:scale-95"
+              onClick={() => onDelete(record.id)}
+              title="Delete"
+            >
+              <Trash width={13} height={13} />
+            </button>
+          )}
         </div>
       </div>
     </article>
