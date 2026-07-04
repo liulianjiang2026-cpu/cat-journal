@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMedicalSettings, saveMedicalSettings } from '../lib/medical'
-import { createPurchase, listPurchases, removePurchase, type PurchaseRecord } from '../lib/shopping'
+import {
+  createPurchase,
+  listPurchases,
+  removePurchase,
+  updatePurchase,
+  type PurchaseInput,
+  type PurchaseRecord,
+} from '../lib/shopping'
 import { Calendar, Check, MedicalCross, Pencil, Plus, Trash, X } from './icons'
 
 const VACCINE_MONTH = 10
@@ -91,6 +98,28 @@ function sortMedicalCosts(records: PurchaseRecord[]) {
   return [...records].sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at))
 }
 
+function formFromMedicalRecord(record: PurchaseRecord): CostFormState {
+  return {
+    date: record.date,
+    event: record.name,
+    amount: String(record.amount),
+    note: record.note,
+  }
+}
+
+function toMedicalPurchaseInput(form: CostFormState): PurchaseInput | null {
+  const amount = Number(form.amount)
+  if (!form.date || !Number.isFinite(amount) || amount < 0) return null
+  return {
+    name: form.event.trim() || '医疗',
+    category: '医疗',
+    spec: '',
+    note: form.note.trim(),
+    amount,
+    date: form.date,
+  }
+}
+
 export default function MedicalPanel() {
   const [dewormedAt, setDewormedAt] = useState('2026-07-02')
   const [draftDate, setDraftDate] = useState('2026-07-02')
@@ -153,22 +182,15 @@ export default function MedicalPanel() {
   async function submitCost(event: React.FormEvent) {
     event.preventDefault()
     if (costSaving) return
-    const amount = Number(costForm.amount)
-    if (!costForm.date || !Number.isFinite(amount) || amount < 0) {
+    const input = toMedicalPurchaseInput(costForm)
+    if (!input) {
       setMessage('喵喵？')
       return
     }
     setCostSaving(true)
     setMessage('')
     try {
-      const created = await createPurchase({
-        name: costForm.event.trim() || '医疗',
-        category: '医疗',
-        spec: '',
-        note: costForm.note.trim(),
-        amount,
-        date: costForm.date,
-      })
+      const created = await createPurchase(input)
       setMedicalCosts((prev) => sortMedicalCosts([created, ...prev]))
       setCostForm(emptyCostForm())
       setCostFormOpen(false)
@@ -178,6 +200,11 @@ export default function MedicalPanel() {
     } finally {
       setCostSaving(false)
     }
+  }
+
+  async function saveCost(id: string, input: PurchaseInput) {
+    const updated = await updatePurchase(id, input)
+    setMedicalCosts((prev) => sortMedicalCosts(prev.map((row) => (row.id === id ? updated : row))))
   }
 
   async function deleteCost(id: string) {
@@ -388,7 +415,13 @@ export default function MedicalPanel() {
         {medicalCosts.length > 0 && (
           <div className="space-y-3">
             {medicalCosts.map((record) => (
-              <MedicalCostCard key={record.id} record={record} editMode={costEditMode} onDelete={deleteCost} />
+              <MedicalCostCard
+                key={record.id}
+                record={record}
+                editMode={costEditMode}
+                onDelete={deleteCost}
+                onSave={saveCost}
+              />
             ))}
           </div>
         )}
@@ -402,36 +435,125 @@ export default function MedicalPanel() {
 function MedicalCostCard({
   record,
   editMode,
+  onSave,
   onDelete,
 }: {
   record: PurchaseRecord
   editMode: boolean
+  onSave: (id: string, input: PurchaseInput) => Promise<void>
   onDelete: (id: string) => void
 }) {
+  const [draft, setDraft] = useState<CostFormState>(() => formFromMedicalRecord(record))
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    setDraft(formFromMedicalRecord(record))
+    setMessage('')
+  }, [record])
+
+  async function save() {
+    const input = toMedicalPurchaseInput(draft)
+    if (!input) {
+      setMessage('喵喵？')
+      return
+    }
+    setBusy(true)
+    setMessage('')
+    try {
+      await onSave(record.id, input)
+      setMessage('喵！')
+    } catch (err) {
+      console.error(err)
+      setMessage(healthErrorMessage(err, '保存失败喵'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteRow() {
+    setBusy(true)
+    setMessage('')
+    try {
+      await onDelete(record.id)
+    } catch (err) {
+      console.error(err)
+      setMessage(healthErrorMessage(err, '删除失败喵'))
+      setBusy(false)
+    }
+  }
+
   return (
     <article className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.12),inset_0_0_0_1px_rgba(74,64,54,.045)]">
       <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-sage/60" />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words font-serif text-base text-ink">{record.name || '医疗'}</h3>
-            <span className="rounded-full bg-sage/18 px-2 py-0.5 text-xs text-coffee/70">{formatDate(record.date)}</span>
+      {!editMode ? (
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="break-words font-serif text-base text-ink">{record.name || '医疗'}</h3>
+              <span className="rounded-full bg-sage/18 px-2 py-0.5 text-xs text-coffee/70">{formatDate(record.date)}</span>
+            </div>
+            {record.note && <p className="mt-1 text-xs text-coffee/55">{record.note}</p>}
           </div>
-          <p className="mt-1 text-xs text-coffee/55">{record.note || 'No note'}</p>
+          <p className="shrink-0 text-right font-serif text-base text-ink">{money.format(record.amount)}</p>
         </div>
-        <div className="flex shrink-0 items-start gap-2">
-          <p className="text-right font-serif text-base text-ink">{money.format(record.amount)}</p>
-          {editMode && (
-            <button
-              className="flex h-7 w-7 items-center justify-center rounded-full text-coffee/35 transition hover:bg-rose/12 hover:text-rose active:scale-95"
-              onClick={() => onDelete(record.id)}
-              title="Delete"
-            >
-              <Trash width={13} height={13} />
-            </button>
-          )}
+      ) : (
+        <div className="space-y-3">
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <Field label="Date">
+              <input
+                className={costField}
+                type="date"
+                value={draft.date}
+                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+              />
+            </Field>
+            <Field label="Event">
+              <input
+                className={costField}
+                value={draft.event}
+                onChange={(e) => setDraft({ ...draft, event: e.target.value })}
+                placeholder="喵喵喵"
+              />
+            </Field>
+            <Field label="Amount">
+              <input
+                className={costField}
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.amount}
+                onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
+                placeholder="0.00"
+              />
+            </Field>
+            <Field label="Note">
+              <input
+                className={costField}
+                value={draft.note}
+                onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                placeholder="喵喵喵"
+              />
+            </Field>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="min-h-5 text-xs text-coffee/55">{message}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-rose/25 bg-rose/10 text-rose transition hover:bg-rose/18 disabled:opacity-50"
+                onClick={deleteRow}
+                disabled={busy}
+                title="Delete"
+              >
+                <Trash width={14} height={14} />
+              </button>
+              <button className="btn-soft h-8 px-3 text-xs disabled:opacity-50" onClick={save} disabled={busy}>
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </article>
   )
 }

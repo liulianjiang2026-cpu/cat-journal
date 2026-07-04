@@ -61,54 +61,54 @@ function shoppingErrorMessage(err: unknown, fallback: string) {
 }
 
 function categoryTone(category: PurchaseCategory) {
-  const tones: Record<PurchaseCategory, { accent: string; glow: string; chip: string; detail: string }> = {
+  const tones: Record<PurchaseCategory, { accent: string; chip: string; detail: string; corner: string }> = {
     猫粮: {
       accent: 'bg-peach/75',
-      glow: 'bg-peach/28',
       chip: 'bg-peach/42 text-coffee/78',
       detail: 'bg-peach/18',
+      corner: 'rgba(248, 220, 192, 0.62)',
     },
     猫砂: {
       accent: 'bg-sky/60',
-      glow: 'bg-sky/24',
       chip: 'bg-sky/35 text-coffee/78',
       detail: 'bg-sky/16',
+      corner: 'rgba(174, 207, 226, 0.54)',
     },
     猫零食: {
       accent: 'bg-pink/65',
-      glow: 'bg-pink/24',
       chip: 'bg-pink/36 text-coffee/78',
       detail: 'bg-pink/16',
+      corner: 'rgba(244, 194, 214, 0.52)',
     },
     玩具: {
       accent: 'bg-lilac/65',
-      glow: 'bg-lilac/24',
       chip: 'bg-lilac/36 text-coffee/78',
       detail: 'bg-lilac/16',
+      corner: 'rgba(202, 191, 228, 0.52)',
     },
     用品: {
       accent: 'bg-lemon/70',
-      glow: 'bg-lemon/24',
       chip: 'bg-lemon/38 text-coffee/78',
       detail: 'bg-lemon/16',
+      corner: 'rgba(240, 227, 160, 0.54)',
     },
     医疗: {
       accent: 'bg-sage/70',
-      glow: 'bg-sage/24',
       chip: 'bg-sage/38 text-coffee/78',
       detail: 'bg-sage/16',
+      corner: 'rgba(188, 202, 166, 0.54)',
     },
     清洁: {
       accent: 'bg-rose/55',
-      glow: 'bg-rose/20',
       chip: 'bg-rose/28 text-coffee/78',
       detail: 'bg-rose/14',
+      corner: 'rgba(232, 167, 161, 0.48)',
     },
     其他: {
       accent: 'bg-clay/50',
-      glow: 'bg-clay/18',
       chip: 'bg-clay/24 text-coffee/78',
       detail: 'bg-clay/12',
+      corner: 'rgba(220, 160, 131, 0.42)',
     },
   }
   return tones[category]
@@ -472,8 +472,11 @@ function PurchaseCard({
 
   return (
     <article className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)]">
+      <span
+        className="pointer-events-none absolute -right-5 -top-6 h-20 w-20 rounded-full"
+        style={{ backgroundColor: tone.corner }}
+      />
       <span className={`absolute left-0 top-5 h-12 w-1.5 rounded-r-full ${tone.accent}`} />
-      <span className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full ${tone.glow}`} />
       {!editMode ? (
         <>
           <div className="flex items-start justify-between gap-3">
