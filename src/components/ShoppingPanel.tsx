@@ -60,6 +60,60 @@ function shoppingErrorMessage(err: unknown, fallback: string) {
   return fallback
 }
 
+function categoryTone(category: PurchaseCategory) {
+  const tones: Record<PurchaseCategory, { accent: string; glow: string; chip: string; detail: string }> = {
+    猫粮: {
+      accent: 'bg-peach/75',
+      glow: 'bg-peach/28',
+      chip: 'bg-peach/42 text-coffee/78',
+      detail: 'bg-peach/18',
+    },
+    猫砂: {
+      accent: 'bg-sky/60',
+      glow: 'bg-sky/24',
+      chip: 'bg-sky/35 text-coffee/78',
+      detail: 'bg-sky/16',
+    },
+    猫零食: {
+      accent: 'bg-pink/65',
+      glow: 'bg-pink/24',
+      chip: 'bg-pink/36 text-coffee/78',
+      detail: 'bg-pink/16',
+    },
+    玩具: {
+      accent: 'bg-lilac/65',
+      glow: 'bg-lilac/24',
+      chip: 'bg-lilac/36 text-coffee/78',
+      detail: 'bg-lilac/16',
+    },
+    用品: {
+      accent: 'bg-lemon/70',
+      glow: 'bg-lemon/24',
+      chip: 'bg-lemon/38 text-coffee/78',
+      detail: 'bg-lemon/16',
+    },
+    医疗: {
+      accent: 'bg-sage/70',
+      glow: 'bg-sage/24',
+      chip: 'bg-sage/38 text-coffee/78',
+      detail: 'bg-sage/16',
+    },
+    清洁: {
+      accent: 'bg-rose/55',
+      glow: 'bg-rose/20',
+      chip: 'bg-rose/28 text-coffee/78',
+      detail: 'bg-rose/14',
+    },
+    其他: {
+      accent: 'bg-clay/50',
+      glow: 'bg-clay/18',
+      chip: 'bg-clay/24 text-coffee/78',
+      detail: 'bg-clay/12',
+    },
+  }
+  return tones[category]
+}
+
 export default function ShoppingPanel() {
   const [records, setRecords] = useState<PurchaseRecord[]>([])
   const [form, setForm] = useState<FormState>(() => emptyForm())
@@ -311,15 +365,9 @@ export default function ShoppingPanel() {
         </form>
       )}
 
-      <div className="space-y-3">
-        {loading ? (
-          <EmptyState face="ฅ^•ﻌ•^ฅ" title="喵喵喵" onAdd={() => setFormOpen(true)} />
-        ) : records.length === 0 ? (
-          <EmptyState face="ฅ^•ﻌ•^ฅ" title="喵喵喵" onAdd={() => setFormOpen(true)} />
-        ) : visibleRecords.length === 0 ? (
-          <EmptyState face="(=･ｪ･=)" title="喵？" onAdd={() => setFormOpen(true)} />
-        ) : (
-          visibleRecords.map((row) => (
+      {!loading && visibleRecords.length > 0 && (
+        <div className="space-y-3">
+          {visibleRecords.map((row) => (
             <PurchaseCard
               key={row.id}
               row={row}
@@ -330,9 +378,9 @@ export default function ShoppingPanel() {
                 setRecords((prev) => sortRecords(prev.map((item) => (item.id === id ? updated : item))))
               }}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -384,6 +432,7 @@ function PurchaseCard({
   const [draft, setDraft] = useState<FormState>(() => formFromRecord(row))
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const tone = categoryTone(row.category)
 
   useEffect(() => {
     setDraft(formFromRecord(row))
@@ -423,14 +472,15 @@ function PurchaseCard({
 
   return (
     <article className="relative overflow-hidden rounded-[18px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_12px_26px_rgba(74,64,54,.13),inset_0_0_0_1px_rgba(74,64,54,.045)]">
-      <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-rose/45" />
+      <span className={`absolute left-0 top-5 h-12 w-1.5 rounded-r-full ${tone.accent}`} />
+      <span className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full ${tone.glow}`} />
       {!editMode ? (
         <>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="break-words font-serif text-base text-ink">{row.name}</h3>
-                <span className="rounded-full bg-rose/12 px-2 py-0.5 text-xs text-rose">{row.category}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${tone.chip}`}>{row.category}</span>
               </div>
               <p className="mt-1 text-xs text-coffee/55">{row.date}</p>
             </div>
@@ -438,8 +488,8 @@ function PurchaseCard({
           </div>
           {(row.spec || row.note) && (
             <div className="mt-3 grid gap-2 text-sm text-coffee/68 sm:grid-cols-2">
-              {row.spec && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">规格：{row.spec}</p>}
-              {row.note && <p className="rounded-[12px] bg-white/72 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)]">备注：{row.note}</p>}
+              {row.spec && <p className={`rounded-[12px] px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)] ${tone.detail}`}>规格：{row.spec}</p>}
+              {row.note && <p className={`rounded-[12px] px-3 py-2 shadow-[inset_0_0_0_1px_rgba(74,64,54,.04)] ${tone.detail}`}>备注：{row.note}</p>}
             </div>
           )}
         </>
@@ -499,21 +549,6 @@ function PurchaseCard({
         </div>
       )}
     </article>
-  )
-}
-
-function EmptyState({ face, title, onAdd }: { face: string; title: string; onAdd: () => void }) {
-  return (
-    <div className="mx-auto max-w-xs rounded-[22px] border border-white/80 bg-[#fffaf0]/90 px-6 py-7 text-center shadow-[0_10px_22px_rgba(74,64,54,.09),inset_0_0_0_1px_rgba(74,64,54,.035)]">
-      <p className="font-serif text-3xl leading-none text-coffee/70">{face}</p>
-      <p className="mt-3 font-serif text-sm text-coffee/58">{title}</p>
-      <button
-        className="mx-auto mt-4 inline-flex h-8 items-center gap-1.5 rounded-full border border-rose/25 bg-rose/10 px-3 font-serif text-xs text-coffee/75 transition hover:bg-rose/16 hover:text-ink active:scale-95"
-        onClick={onAdd}
-      >
-        <Plus width={13} height={13} /> New
-      </button>
-    </div>
   )
 }
 
