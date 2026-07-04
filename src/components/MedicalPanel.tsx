@@ -17,7 +17,7 @@ const money = new Intl.NumberFormat('zh-CN', {
 
 interface CostFormState {
   date: string
-  time: string
+  event: string
   amount: string
   note: string
 }
@@ -26,14 +26,10 @@ function todayText() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function nowTimeText() {
-  return new Date().toTimeString().slice(0, 5)
-}
-
 function emptyCostForm(): CostFormState {
   return {
     date: todayText(),
-    time: nowTimeText(),
+    event: '',
     amount: '',
     note: '',
   }
@@ -166,9 +162,9 @@ export default function MedicalPanel() {
     setMessage('')
     try {
       const created = await createPurchase({
-        name: '医疗',
+        name: costForm.event.trim() || '医疗',
         category: '医疗',
-        spec: costForm.time,
+        spec: '',
         note: costForm.note.trim(),
         amount,
         date: costForm.date,
@@ -339,12 +335,12 @@ export default function MedicalPanel() {
                   onChange={(e) => setCostForm({ ...costForm, date: e.target.value })}
                 />
               </Field>
-              <Field label="Time">
+              <Field label="Event">
                 <input
                   className={costField}
-                  type="time"
-                  value={costForm.time}
-                  onChange={(e) => setCostForm({ ...costForm, time: e.target.value })}
+                  value={costForm.event}
+                  onChange={(e) => setCostForm({ ...costForm, event: e.target.value })}
+                  placeholder="比如：复查 / 疫苗 / 看诊"
                 />
               </Field>
               <Field label="Amount">
@@ -433,11 +429,8 @@ function MedicalCostCard({ record, onDelete }: { record: PurchaseRecord; onDelet
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words font-serif text-base text-ink">医疗</h3>
+            <h3 className="break-words font-serif text-base text-ink">{record.name || '医疗'}</h3>
             <span className="rounded-full bg-sage/18 px-2 py-0.5 text-xs text-coffee/70">{formatDate(record.date)}</span>
-            {record.spec && (
-              <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs text-coffee/58">{record.spec}</span>
-            )}
           </div>
           <p className="mt-1 text-xs text-coffee/55">{record.note || 'No note'}</p>
         </div>
