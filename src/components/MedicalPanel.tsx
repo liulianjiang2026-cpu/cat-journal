@@ -340,7 +340,6 @@ export default function MedicalPanel() {
                   className={costField}
                   value={costForm.event}
                   onChange={(e) => setCostForm({ ...costForm, event: e.target.value })}
-                  placeholder="比如：复查 / 疫苗 / 看诊"
                 />
               </Field>
               <Field label="Amount">
@@ -359,7 +358,6 @@ export default function MedicalPanel() {
                   className={costField}
                   value={costForm.note}
                   onChange={(e) => setCostForm({ ...costForm, note: e.target.value })}
-                  placeholder="喵喵喵"
                 />
               </Field>
             </div>
