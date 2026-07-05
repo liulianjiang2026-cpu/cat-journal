@@ -123,8 +123,12 @@ function toMedicalPurchaseInput(form: CostFormState): PurchaseInput | null {
 export default function MedicalPanel() {
   const [dewormedAt, setDewormedAt] = useState('2026-07-02')
   const [draftDate, setDraftDate] = useState('2026-07-02')
+  const [litterChangedAt, setLitterChangedAt] = useState('2026-07-05')
+  const [draftLitterDate, setDraftLitterDate] = useState('2026-07-05')
   const [editing, setEditing] = useState(false)
+  const [litterEditing, setLitterEditing] = useState(false)
   const [actionsOpen, setActionsOpen] = useState(false)
+  const [litterActionsOpen, setLitterActionsOpen] = useState(false)
   const [medicalCosts, setMedicalCosts] = useState<PurchaseRecord[]>([])
   const [costForm, setCostForm] = useState<CostFormState>(() => emptyCostForm())
   const [costFormOpen, setCostFormOpen] = useState(false)
@@ -141,6 +145,8 @@ export default function MedicalPanel() {
         if (!alive) return
         setDewormedAt(settings.dewormed_at)
         setDraftDate(settings.dewormed_at)
+        setLitterChangedAt(settings.litter_changed_at)
+        setDraftLitterDate(settings.litter_changed_at)
         setMedicalCosts(sortMedicalCosts(purchaseRows.filter((row) => row.category === '医疗')))
       })
       .catch((err) => {
@@ -159,17 +165,41 @@ export default function MedicalPanel() {
   const vaccine = useMemo(() => nextVaccineInfo(today), [today])
   const sterilizedDays = useMemo(() => Math.max(0, diffDays(parseLocalDate(STERILIZED_AT), today)), [today])
   const dewormedDays = useMemo(() => Math.max(0, diffDays(parseLocalDate(dewormedAt), today)), [dewormedAt, today])
+  const litterChangedDays = useMemo(() => Math.max(0, diffDays(parseLocalDate(litterChangedAt), today)), [litterChangedAt, today])
 
   async function saveDewormedDate() {
     if (saving) return
     setSaving(true)
     setMessage('')
     try {
-      const saved = await saveMedicalSettings({ dewormed_at: draftDate })
+      const saved = await saveMedicalSettings({ dewormed_at: draftDate, litter_changed_at: litterChangedAt })
       setDewormedAt(saved.dewormed_at)
       setDraftDate(saved.dewormed_at)
+      setLitterChangedAt(saved.litter_changed_at)
+      setDraftLitterDate(saved.litter_changed_at)
       setEditing(false)
       setActionsOpen(false)
+      setMessage('喵！')
+    } catch (err) {
+      console.error(err)
+      setMessage(healthErrorMessage(err, '保存失败喵'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function saveLitterChangedDate() {
+    if (saving) return
+    setSaving(true)
+    setMessage('')
+    try {
+      const saved = await saveMedicalSettings({ dewormed_at: dewormedAt, litter_changed_at: draftLitterDate })
+      setDewormedAt(saved.dewormed_at)
+      setDraftDate(saved.dewormed_at)
+      setLitterChangedAt(saved.litter_changed_at)
+      setDraftLitterDate(saved.litter_changed_at)
+      setLitterEditing(false)
+      setLitterActionsOpen(false)
       setMessage('喵！')
     } catch (err) {
       console.error(err)
@@ -221,7 +251,7 @@ export default function MedicalPanel() {
 
   return (
     <section className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <HealthCard
           accent="bg-rose/45"
           icon={<MedicalCross width={18} height={18} />}
@@ -232,6 +262,7 @@ export default function MedicalPanel() {
           detail="Annual booster"
           onClick={() => {
             setActionsOpen(false)
+            setLitterActionsOpen(false)
           }}
         />
         <HealthCard
@@ -244,6 +275,7 @@ export default function MedicalPanel() {
           detail="Growing steady"
           onClick={() => {
             setActionsOpen(false)
+            setLitterActionsOpen(false)
           }}
         />
         <HealthCard
@@ -255,7 +287,10 @@ export default function MedicalPanel() {
           note={`Last ${formatDate(dewormedAt)}`}
           detail="After treatment"
           onClick={() => {
-            if (!editing) setActionsOpen((value) => !value)
+            if (!editing) {
+              setLitterActionsOpen(false)
+              setActionsOpen((value) => !value)
+            }
           }}
           action={actionsOpen && !editing ? (
             <button
@@ -272,6 +307,35 @@ export default function MedicalPanel() {
             </button>
           ) : null}
         />
+        <HealthCard
+          accent="bg-lemon/60"
+          icon={<Calendar width={18} height={18} />}
+          label="Litter"
+          value={loading ? '...' : String(litterChangedDays)}
+          unit="days"
+          note={`Changed ${formatDate(litterChangedAt)}`}
+          detail="Fresh box"
+          onClick={() => {
+            if (!litterEditing) {
+              setActionsOpen(false)
+              setLitterActionsOpen((value) => !value)
+            }
+          }}
+          action={litterActionsOpen && !litterEditing ? (
+            <button
+              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/72 text-coffee/55 shadow-[0_5px_14px_rgba(74,64,54,.10),inset_0_0_0_1px_rgba(74,64,54,.04)] transition hover:text-ink active:scale-95 animate-pop"
+              onClick={(event) => {
+                event.stopPropagation()
+                setDraftLitterDate(litterChangedAt)
+                setLitterEditing(true)
+                setMessage('')
+              }}
+              title="Edit litter date"
+            >
+              <Pencil width={12} height={12} />
+            </button>
+          ) : null}
+        />
       </div>
 
       {editing && (
@@ -280,7 +344,7 @@ export default function MedicalPanel() {
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="font-script text-[27px] leading-none text-ink">Deworming</p>
-              <p className="mt-1 text-xs text-coffee/48">Update the last treatment date</p>
+              <p className="mt-1 text-xs text-coffee/48">喵喵喵</p>
             </div>
             <button
               className="flex h-8 w-8 items-center justify-center rounded-full text-coffee/45 transition hover:bg-white/80 hover:text-ink"
@@ -305,6 +369,43 @@ export default function MedicalPanel() {
               />
             </Field>
             <button className="btn-soft h-10 shrink-0 disabled:opacity-55" onClick={saveDewormedDate} disabled={saving}>
+              <Check width={15} height={15} /> {saving ? 'Saving' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {litterEditing && (
+        <div className="relative overflow-hidden rounded-[22px] border border-white/80 bg-[#fffaf0] p-4 shadow-[0_14px_30px_rgba(74,64,54,.12),inset_0_0_0_1px_rgba(74,64,54,.045)] animate-pop">
+          <span className="absolute left-0 top-5 h-12 w-1.5 rounded-r-full bg-lemon/60" />
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-script text-[27px] leading-none text-ink">Litter</p>
+              <p className="mt-1 text-xs text-coffee/48">喵喵喵</p>
+            </div>
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-full text-coffee/45 transition hover:bg-white/80 hover:text-ink"
+              onClick={() => {
+                setLitterEditing(false)
+                setLitterActionsOpen(false)
+                setDraftLitterDate(litterChangedAt)
+                setMessage('')
+              }}
+              title="Close"
+            >
+              <X width={15} height={15} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Field label="Last Date">
+              <input
+                className={costField}
+                type="date"
+                value={draftLitterDate}
+                onChange={(e) => setDraftLitterDate(e.target.value)}
+              />
+            </Field>
+            <button className="btn-soft h-10 shrink-0 disabled:opacity-55" onClick={saveLitterChangedDate} disabled={saving}>
               <Check width={15} height={15} /> {saving ? 'Saving' : 'Save'}
             </button>
           </div>

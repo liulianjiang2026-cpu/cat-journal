@@ -3,12 +3,14 @@ import { supabase } from './supabase'
 
 export interface MedicalSettings {
   dewormed_at: string
+  litter_changed_at: string
 }
 
 const SETTINGS_KEY = 'medical'
 const LOCAL_KEY = 'cat-journal:medical-settings'
 const DEFAULT_SETTINGS: MedicalSettings = {
   dewormed_at: '2026-07-02',
+  litter_changed_at: '2026-07-05',
 }
 
 function client() {
@@ -23,6 +25,9 @@ function normalizeSettings(value: unknown): MedicalSettings {
     dewormed_at: typeof row.dewormed_at === 'string' && row.dewormed_at
       ? row.dewormed_at
       : DEFAULT_SETTINGS.dewormed_at,
+    litter_changed_at: typeof row.litter_changed_at === 'string' && row.litter_changed_at
+      ? row.litter_changed_at
+      : DEFAULT_SETTINGS.litter_changed_at,
   }
 }
 
