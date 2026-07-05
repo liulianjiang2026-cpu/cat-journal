@@ -64,49 +64,49 @@ function categoryTone(category: PurchaseCategory) {
   const tones: Record<PurchaseCategory, { accent: string; chip: string; detail: string; corner: string }> = {
     猫粮: {
       accent: 'bg-peach/75',
-      chip: 'bg-peach/42 text-coffee/78',
+      chip: 'rgba(248, 220, 192, 0.76)',
       detail: 'bg-peach/18',
       corner: 'rgba(248, 220, 192, 0.62)',
     },
     猫砂: {
       accent: 'bg-sky/60',
-      chip: 'bg-sky/35 text-coffee/78',
+      chip: 'rgba(174, 207, 226, 0.66)',
       detail: 'bg-sky/16',
       corner: 'rgba(174, 207, 226, 0.54)',
     },
     猫零食: {
       accent: 'bg-pink/65',
-      chip: 'bg-pink/36 text-coffee/78',
+      chip: 'rgba(244, 194, 214, 0.66)',
       detail: 'bg-pink/16',
       corner: 'rgba(244, 194, 214, 0.52)',
     },
     玩具: {
       accent: 'bg-lilac/65',
-      chip: 'bg-lilac/36 text-coffee/78',
+      chip: 'rgba(202, 191, 228, 0.66)',
       detail: 'bg-lilac/16',
       corner: 'rgba(202, 191, 228, 0.52)',
     },
     用品: {
       accent: 'bg-lemon/70',
-      chip: 'bg-lemon/38 text-coffee/78',
+      chip: 'rgba(240, 227, 160, 0.7)',
       detail: 'bg-lemon/16',
       corner: 'rgba(240, 227, 160, 0.54)',
     },
     医疗: {
       accent: 'bg-sage/70',
-      chip: 'bg-sage/38 text-coffee/78',
+      chip: 'rgba(188, 202, 166, 0.7)',
       detail: 'bg-sage/16',
       corner: 'rgba(188, 202, 166, 0.54)',
     },
     清洁: {
       accent: 'bg-rose/55',
-      chip: 'bg-rose/28 text-coffee/78',
+      chip: 'rgba(232, 167, 161, 0.56)',
       detail: 'bg-rose/14',
       corner: 'rgba(232, 167, 161, 0.48)',
     },
     其他: {
       accent: 'bg-clay/50',
-      chip: 'bg-clay/24 text-coffee/78',
+      chip: 'rgba(220, 160, 131, 0.5)',
       detail: 'bg-clay/12',
       corner: 'rgba(220, 160, 131, 0.42)',
     },
@@ -483,7 +483,12 @@ function PurchaseCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="break-words font-serif text-base text-ink">{row.name}</h3>
-                <span className={`rounded-full px-2 py-0.5 text-xs ${tone.chip}`}>{row.category}</span>
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs text-coffee/78"
+                  style={{ backgroundColor: tone.chip }}
+                >
+                  {row.category}
+                </span>
               </div>
               <p className="mt-1 text-xs text-coffee/55">{row.date}</p>
             </div>
