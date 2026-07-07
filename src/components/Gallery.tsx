@@ -27,11 +27,11 @@ type DiaryView = 'album' | 'timeline'
 
 const CARD_GRID = 'grid grid-cols-2 items-start gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 const toolbarShell =
-  'border border-white/80 bg-[#fffaf0] shadow-[0_5px_12px_rgba(74,64,54,.07),inset_0_0_0_1px_rgba(74,64,54,.035)] backdrop-blur'
+  'border border-white/85 bg-[#fffaf0] shadow-[0_3px_8px_rgba(74,64,54,.055),inset_0_0_0_1px_rgba(74,64,54,.03)] backdrop-blur'
 const toolbarIconButton =
-  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] transition hover:bg-white/70 hover:text-ink active:scale-95'
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition hover:bg-white/70 hover:text-ink active:scale-95 sm:h-9 sm:w-9'
 const toolbarSegmentButton =
-  'inline-flex h-full items-center justify-center gap-1 rounded-[16px] px-3 text-[12px] font-medium transition active:scale-[0.99]'
+  'inline-flex h-full flex-1 items-center justify-center gap-0.5 text-[11px] font-medium transition active:scale-[0.99] sm:gap-1 sm:text-[12px]'
 
 export default function Gallery() {
   const { isAdmin, logoutAdmin } = useAuth()
@@ -192,16 +192,16 @@ export default function Gallery() {
 
       {/* Diary toolbar: 视图切换 + 月份筛选 */}
       {!loading && entries.length > 0 && section === 'diary' && (
-        <div className="mx-auto mt-4 flex max-w-5xl flex-nowrap items-center justify-center gap-2 overflow-x-auto px-4 text-[12px] font-serif [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className={`inline-flex h-9 shrink-0 rounded-[20px] p-1 ${toolbarShell}`}>
+        <div className="mx-auto mt-4 flex max-w-5xl flex-nowrap items-center justify-center gap-1.5 overflow-x-auto px-2 text-[12px] font-serif [scrollbar-width:none] sm:gap-2 sm:px-4 [&::-webkit-scrollbar]:hidden">
+          <div className={`inline-flex h-8 w-[11.9rem] shrink-0 overflow-hidden rounded-full sm:h-9 sm:w-[13rem] ${toolbarShell}`}>
             <button
-              className={`${toolbarSegmentButton} ${view === 'album' ? 'bg-[#756858] text-cream' : 'text-coffee/58 hover:bg-white/55 hover:text-coffee'}`}
+              className={`${toolbarSegmentButton} ${view === 'album' ? 'bg-[#8a7a66] text-cream' : 'text-coffee/55 hover:bg-white/45 hover:text-coffee'}`}
               onClick={() => setView('album')}
             >
               <Grid width={13} height={13} /> Album
             </button>
             <button
-              className={`${toolbarSegmentButton} ${view === 'timeline' ? 'bg-[#756858] text-cream' : 'text-coffee/58 hover:bg-white/55 hover:text-coffee'}`}
+              className={`${toolbarSegmentButton} ${view === 'timeline' ? 'bg-[#8a7a66] text-cream' : 'text-coffee/55 hover:bg-white/45 hover:text-coffee'}`}
               onClick={() => setView('timeline')}
             >
               <Clock width={13} height={13} /> Timeline
@@ -209,10 +209,10 @@ export default function Gallery() {
           </div>
 
           {months.length > 1 && (
-            <label className={`inline-flex h-9 w-[5.8rem] shrink-0 items-center gap-1 rounded-[18px] px-2 text-coffee/65 ${toolbarShell}`}>
+            <label className={`inline-flex h-8 w-[4.95rem] shrink-0 items-center gap-0.5 rounded-full px-1.5 text-coffee/58 sm:h-9 sm:w-[5.8rem] sm:gap-1 sm:px-2 ${toolbarShell}`}>
               <Calendar width={13} height={13} />
               <select
-                className="min-w-0 flex-1 cursor-pointer bg-transparent text-[12px] text-ink/88 outline-none"
+                className="min-w-0 flex-1 cursor-pointer bg-transparent text-[11px] text-ink/78 outline-none sm:text-[12px]"
                 value={filterMonth}
                 onChange={(e) => setFilterMonth(e.target.value)}
               >
