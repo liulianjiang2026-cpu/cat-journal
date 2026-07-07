@@ -80,26 +80,22 @@ export default function UploadDialog({
         </button>
         <h2 className="mb-4 font-script text-4xl leading-tight text-ink">Say Meow!</h2>
 
-        <div
-          className="mb-4 cursor-pointer rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 p-6 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70"
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault()
-            addFiles(e.dataTransfer.files)
-          }}
-        >
-          <Plus className="mx-auto mb-1" />
-          <p className="font-cute text-base">喵喵喵！</p>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => addFiles(e.target.files)}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => addFiles(e.target.files)}
+        />
+
+        {items.length === 0 && (
+          <UploadPicker
+            className="mb-4 p-6"
+            onPick={() => inputRef.current?.click()}
+            onFiles={addFiles}
           />
-        </div>
+        )}
 
         {items.length > 1 && (
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-paper/60 px-3 py-2 font-cute text-sm text-coffee">
@@ -160,6 +156,12 @@ export default function UploadDialog({
                 </button>
               </div>
             ))}
+            <UploadPicker
+              className="p-4"
+              compact
+              onPick={() => inputRef.current?.click()}
+              onFiles={addFiles}
+            />
           </div>
         )}
 
@@ -177,6 +179,33 @@ export default function UploadDialog({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function UploadPicker({
+  className = '',
+  compact = false,
+  onPick,
+  onFiles,
+}: {
+  className?: string
+  compact?: boolean
+  onPick: () => void
+  onFiles: (files: FileList | null) => void
+}) {
+  return (
+    <div
+      className={`cursor-pointer rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70 ${className}`}
+      onClick={onPick}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault()
+        onFiles(e.dataTransfer.files)
+      }}
+    >
+      <Plus className="mx-auto mb-1" width={compact ? 16 : 18} height={compact ? 16 : 18} />
+      <p className={`font-cute ${compact ? 'text-sm' : 'text-base'}`}>喵喵喵！</p>
     </div>
   )
 }
