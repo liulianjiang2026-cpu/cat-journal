@@ -26,6 +26,10 @@ type Section = 'diary' | 'shopping' | 'medical'
 type DiaryView = 'album' | 'timeline'
 
 const CARD_GRID = 'grid grid-cols-2 items-start gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+const toolbarShell =
+  'border border-ink/10 bg-cream/80 shadow-[0_6px_16px_rgba(74,64,54,.08),inset_0_0_0_1px_rgba(255,255,255,.55)] backdrop-blur'
+const toolbarIconButton =
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[14px] transition hover:bg-cream hover:text-ink active:scale-95'
 
 export default function Gallery() {
   const { isAdmin, logoutAdmin } = useAuth()
@@ -187,15 +191,15 @@ export default function Gallery() {
       {/* Diary toolbar: 视图切换 + 月份筛选 */}
       {!loading && entries.length > 0 && section === 'diary' && (
         <div className="mx-auto mt-4 flex max-w-5xl flex-nowrap items-center justify-center gap-1.5 overflow-x-auto px-4 text-[12px] font-serif [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="inline-flex shrink-0 rounded-[16px] border border-ink/10 bg-cream/75 p-0.5 shadow-card backdrop-blur">
+          <div className={`inline-flex h-8 shrink-0 rounded-[16px] p-0.5 ${toolbarShell}`}>
             <button
-              className={`btn h-8 gap-0.5 rounded-[12px] px-2 py-0 text-[12px] font-medium ${view === 'album' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
+              className={`btn h-7 gap-0.5 rounded-[11px] px-2 py-0 text-[12px] font-medium ${view === 'album' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
               onClick={() => setView('album')}
             >
               <Grid width={13} height={13} /> Album
             </button>
             <button
-              className={`btn h-8 gap-0.5 rounded-[12px] px-2 py-0 text-[12px] font-medium ${view === 'timeline' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
+              className={`btn h-7 gap-0.5 rounded-[11px] px-2 py-0 text-[12px] font-medium ${view === 'timeline' ? 'bg-ink text-cream shadow-sm' : 'text-coffee/75'}`}
               onClick={() => setView('timeline')}
             >
               <Clock width={13} height={13} /> Timeline
@@ -203,7 +207,7 @@ export default function Gallery() {
           </div>
 
           {months.length > 1 && (
-            <label className="inline-flex h-8 w-[5.35rem] shrink-0 items-center gap-0.5 rounded-[16px] border border-ink/10 bg-cream/75 px-1.5 text-coffee/75 shadow-card backdrop-blur">
+            <label className={`inline-flex h-8 w-[5.35rem] shrink-0 items-center gap-0.5 rounded-[16px] px-1.5 text-coffee/75 ${toolbarShell}`}>
               <Calendar width={13} height={13} />
               <select
                 className="min-w-0 flex-1 cursor-pointer bg-transparent text-[12px] text-ink outline-none"
@@ -221,7 +225,7 @@ export default function Gallery() {
           )}
 
           <button
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[16px] border border-ink/10 bg-cream/75 text-coffee/75 shadow-card backdrop-blur transition hover:text-ink active:scale-95"
+            className={`${toolbarIconButton} ${toolbarShell} text-coffee/75`}
             onClick={() => setSortAsc((v) => !v)}
             title={sortAsc ? 'Oldest first' : 'Latest first'}
           >
@@ -230,7 +234,7 @@ export default function Gallery() {
 
           {isAdmin && (
             <button
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[16px] border border-rose/35 bg-rose/18 text-ink shadow-card backdrop-blur transition hover:bg-rose/25 active:scale-95"
+              className={`${toolbarIconButton} ${toolbarShell} text-rose/70 hover:text-rose`}
               onClick={() => setShowUpload(true)}
               title="Add diary"
             >
