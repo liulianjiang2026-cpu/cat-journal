@@ -24,14 +24,18 @@ export default function UploadDialog({
   const [progress, setProgress] = useState(0)
   const [batchDate, setBatchDate] = useState(today())
   const inputRef = useRef<HTMLInputElement>(null)
+  const itemsRef = useRef<Pending[]>([])
 
   function applyDateToAll() {
     setItems((prev) => prev.map((it) => ({ ...it, date: batchDate })))
   }
 
   useEffect(() => {
-    return () => items.forEach((it) => URL.revokeObjectURL(it.preview))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    itemsRef.current = items
+  }, [items])
+
+  useEffect(() => {
+    return () => itemsRef.current.forEach((it) => URL.revokeObjectURL(it.preview))
   }, [])
 
   function addFiles(files: FileList | null) {
@@ -44,6 +48,7 @@ export default function UploadDialog({
         .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: fallback }))
       return [...prev, ...next]
     })
+    if (inputRef.current) inputRef.current.value = ''
   }
 
   async function save() {
@@ -55,7 +60,9 @@ export default function UploadDialog({
       for (let i = 0; i < items.length; i++) {
         const it = items[i]
         const compressed = await compressImage(it.file)
-        const dateISO = new Date(`${it.date}T12:00:00`).toISOString()
+        const date = new Date(`${it.date}T12:00:00`)
+        date.setSeconds(date.getSeconds() + i)
+        const dateISO = date.toISOString()
         const entry = await backend.create(compressed, it.caption.trim(), dateISO)
         created.push(entry)
         setProgress(i + 1)
@@ -78,7 +85,9 @@ export default function UploadDialog({
         <button onClick={onClose} className="absolute right-4 top-4 text-coffee hover:text-ink">
           <X />
         </button>
-        <h2 className="mb-4 font-script text-4xl leading-tight text-ink">Say Meow!</h2>
+        <h2 className="mb-4 font-script text-4xl leading-tight text-ink">
+          {items.length > 0 ? `${items.length} Meows` : 'Say Meow!'}
+        </h2>
 
         <input
           ref={inputRef}
@@ -175,7 +184,7 @@ export default function UploadDialog({
             喵❌
           </button>
           <button className="btn-primary font-cute" onClick={save} disabled={busy || items.length === 0}>
-            喵✅
+            {items.length > 1 ? `喵✅ ${items.length}` : '喵✅'}
           </button>
         </div>
       </div>
