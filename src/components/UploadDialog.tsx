@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { backend, type Entry } from '../lib/backend'
 import { compressImage } from '../lib/image'
 import { X, Plus, Calendar } from './icons'
@@ -23,8 +23,8 @@ export default function UploadDialog({
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(0)
   const [batchDate, setBatchDate] = useState(today())
-  const inputRef = useRef<HTMLInputElement>(null)
   const itemsRef = useRef<Pending[]>([])
+  const inputId = useId()
 
   function applyDateToAll() {
     setItems((prev) => prev.map((it) => ({ ...it, date: batchDate })))
@@ -48,7 +48,6 @@ export default function UploadDialog({
         .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: fallback }))
       return [...prev, ...next]
     })
-    if (inputRef.current) inputRef.current.value = ''
   }
 
   async function save() {
@@ -85,23 +84,25 @@ export default function UploadDialog({
         <button onClick={onClose} className="absolute right-4 top-4 text-coffee hover:text-ink">
           <X />
         </button>
-        <h2 className="mb-4 font-script text-4xl leading-tight text-ink">
-          {items.length > 0 ? `${items.length} Meows` : 'Say Meow!'}
-        </h2>
+        <h2 className="mb-4 font-script text-4xl leading-tight text-ink">Say Meow!</h2>
 
         <input
-          ref={inputRef}
+          id={inputId}
           type="file"
           accept="image/*"
           multiple
-          className="hidden"
-          onChange={(e) => addFiles(e.target.files)}
+          className="sr-only"
+          aria-label="Choose photos"
+          onChange={(e) => {
+            addFiles(e.target.files)
+            e.currentTarget.value = ''
+          }}
         />
 
         {items.length === 0 && (
           <UploadPicker
             className="mb-4 p-6"
-            onPick={() => inputRef.current?.click()}
+            inputId={inputId}
             onFiles={addFiles}
           />
         )}
@@ -168,7 +169,7 @@ export default function UploadDialog({
             <UploadPicker
               className="p-4"
               compact
-              onPick={() => inputRef.current?.click()}
+              inputId={inputId}
               onFiles={addFiles}
             />
           </div>
@@ -195,18 +196,18 @@ export default function UploadDialog({
 function UploadPicker({
   className = '',
   compact = false,
-  onPick,
+  inputId,
   onFiles,
 }: {
   className?: string
   compact?: boolean
-  onPick: () => void
+  inputId: string
   onFiles: (files: FileList | null) => void
 }) {
   return (
-    <div
+    <label
+      htmlFor={inputId}
       className={`cursor-pointer rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70 ${className}`}
-      onClick={onPick}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault()
@@ -215,6 +216,6 @@ function UploadPicker({
     >
       <Plus className="mx-auto mb-1" width={compact ? 16 : 18} height={compact ? 16 : 18} />
       <p className={`font-cute ${compact ? 'text-sm' : 'text-base'}`}>喵喵喵！</p>
-    </div>
+    </label>
   )
 }
