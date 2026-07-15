@@ -106,17 +106,17 @@ export default function UploadDialog({
         )}
 
         {items.length > 1 && (
-          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-paper/60 px-3 py-2 font-cute text-sm text-coffee">
+          <div className="mb-3 flex min-w-0 flex-wrap items-center gap-2 rounded-2xl bg-paper/60 px-3 py-2 font-cute text-sm text-coffee">
             <Calendar width={15} height={15} />
             <span>喵喵～</span>
             <input
               type="date"
-              className="field flex-1 px-2 py-1 text-sm"
+              className="field min-w-0 flex-1 px-2 py-1 text-sm"
               max={today()}
               value={batchDate}
               onChange={(e) => setBatchDate(e.target.value || today())}
             />
-            <button className="btn-soft px-3 py-1 font-cute text-xs" onClick={applyDateToAll}>
+            <button className="btn-soft shrink-0 px-3 py-1 font-cute text-xs" onClick={applyDateToAll}>
               ALL！
             </button>
           </div>
@@ -125,7 +125,7 @@ export default function UploadDialog({
         {items.length > 0 && (
           <div className="-mr-2 flex-1 space-y-3 overflow-y-auto pr-2">
             {items.map((it, i) => (
-              <div key={i} className="flex gap-3 rounded-2xl bg-paper/50 p-2">
+              <div key={i} className="flex min-w-0 gap-3 rounded-2xl bg-paper/50 p-2">
                 <img src={it.preview} className="h-24 w-20 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1 space-y-2">
                   <label className="flex min-w-0 items-center gap-2 text-xs text-coffee">
@@ -154,7 +154,7 @@ export default function UploadDialog({
                   />
                 </div>
                 <button
-                  className="self-start text-coffee/60 hover:text-rose"
+                  className="shrink-0 self-start text-coffee/60 hover:text-rose"
                   onClick={() => {
                     URL.revokeObjectURL(it.preview)
                     setItems(items.filter((_, idx) => idx !== i))
@@ -205,7 +205,7 @@ function UploadPicker({
   return (
     <label
       htmlFor={inputId}
-      className={`cursor-pointer rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70 ${className}`}
+      className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-coffee/30 bg-paper/40 text-center text-coffee transition hover:border-coffee/60 hover:bg-paper/70 ${className}`}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault()
