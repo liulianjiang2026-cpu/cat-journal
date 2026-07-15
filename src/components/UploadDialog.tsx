@@ -43,10 +43,9 @@ export default function UploadDialog({
     setItems((prev) => {
       // 第一张默认今天，后续沿用上一张的日期
       const fallback = prev.length ? prev[prev.length - 1].date : today()
-      const next: Pending[] = Array.from(files)
-        .filter((f) => f.type.startsWith('image/'))
-        .map((f) => ({ file: f, preview: URL.createObjectURL(f), caption: '', date: fallback }))
-      return [...prev, ...next]
+      const file = Array.from(files).find((f) => f.type.startsWith('image/'))
+      if (!file) return prev
+      return [...prev, { file, preview: URL.createObjectURL(file), caption: '', date: fallback }]
     })
   }
 
@@ -90,9 +89,8 @@ export default function UploadDialog({
           id={inputId}
           type="file"
           accept="image/*"
-          multiple
           className="sr-only"
-          aria-label="Choose photos"
+          aria-label="Choose photo"
           onChange={(e) => {
             addFiles(e.target.files)
             e.currentTarget.value = ''
@@ -129,12 +127,12 @@ export default function UploadDialog({
             {items.map((it, i) => (
               <div key={i} className="flex gap-3 rounded-2xl bg-paper/50 p-2">
                 <img src={it.preview} className="h-24 w-20 shrink-0 rounded-lg object-cover" />
-                <div className="flex-1 space-y-2">
-                  <label className="flex items-center gap-2 text-xs text-coffee">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <label className="flex min-w-0 items-center gap-2 text-xs text-coffee">
                     <Calendar width={14} height={14} />
                     <input
                       type="date"
-                      className="field flex-1 px-2 py-1 text-sm"
+                      className="field min-w-0 flex-1 px-2 py-1 text-sm"
                       max={today()}
                       value={it.date}
                       onChange={(e) => {
